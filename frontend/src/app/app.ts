@@ -36,7 +36,7 @@ interface IndicatorBox {
   height: number;
 }
 
-const ANIMATION_MS = 360;
+const ANIMATION_MS = 420;
 
 /** Dashboard shell: sidebar with the views on the left, the current view on the right. */
 @Component({
@@ -78,20 +78,20 @@ export class App {
     { initialValue: this.router.url },
   );
 
-  /** Sidebar entry of the current page, e.g. "/settings" for "/settings/test". */
+  /** Sidebar entry of the current page, e.g. "/settings" for a settings page. */
   protected readonly activePath = computed(
     () => this.order.find((path) => this.url().startsWith(path)) ?? null,
   );
 
   protected readonly indicator = signal<IndicatorBox | null>(null);
   protected readonly navigationDirection = signal<NavigationDirection>('down');
-  protected readonly isAnimating = signal(false);
-  protected readonly indicatorJump = signal(false);
+  protected readonly isPageAnimating = signal(false);
+  protected readonly indicatorFade = signal(false);
 
   private readonly nav = viewChild.required<ElementRef<HTMLElement>>('nav');
   private previousPath: string | null = null;
-  private animationTimer?: ReturnType<typeof setTimeout>;
-  private indicatorJumpTimer?: ReturnType<typeof setTimeout>;
+  private pageAnimationTimer?: ReturnType<typeof setTimeout>;
+  private indicatorFadeTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     effect(() => {
@@ -109,21 +109,26 @@ export class App {
       document.fonts?.ready.then(() => this.placeIndicator());
     });
     inject(DestroyRef).onDestroy(() => {
-      clearTimeout(this.animationTimer);
-      clearTimeout(this.indicatorJumpTimer);
+      clearTimeout(this.pageAnimationTimer);
+      clearTimeout(this.indicatorFadeTimer);
     });
   }
 
   /** Puts the highlight behind the sidebar entry of the current page. */
   protected placeIndicator(): void {
     const active = this.nav().nativeElement.querySelector<HTMLElement>('[aria-current="page"]');
+    const nav = this.nav().nativeElement;
     const box = active
-      ? {
-          top: active.offsetTop,
-          left: active.offsetLeft,
-          width: active.offsetWidth,
-          height: active.offsetHeight,
-        }
+      ? (() => {
+          const activeRect = active.getBoundingClientRect();
+          const navRect = nav.getBoundingClientRect();
+          return {
+            top: activeRect.top - navRect.top + nav.scrollTop,
+            left: activeRect.left - navRect.left + nav.scrollLeft,
+            width: activeRect.width,
+            height: activeRect.height,
+          };
+        })()
       : null;
     if (JSON.stringify(box) !== JSON.stringify(this.indicator())) {
       this.indicator.set(box);
@@ -141,18 +146,17 @@ export class App {
     this.navigationDirection.set(
       this.order.indexOf(path) > this.order.indexOf(previous) ? 'down' : 'up',
     );
-    this.isAnimating.set(false);
-    clearTimeout(this.indicatorJumpTimer);
-    this.indicatorJump.set(!sameGroup);
+    this.isPageAnimating.set(false);
+    clearTimeout(this.pageAnimationTimer);
+    clearTimeout(this.indicatorFadeTimer);
+    this.indicatorFade.set(!sameGroup);
     if (!sameGroup) {
-      this.indicatorJumpTimer = setTimeout(() => this.indicatorJump.set(false), 80);
-      return;
+      this.indicatorFadeTimer = setTimeout(() => this.indicatorFade.set(false), 220);
     }
 
-    clearTimeout(this.animationTimer);
     requestAnimationFrame(() => {
-      this.isAnimating.set(true);
-      this.animationTimer = setTimeout(() => this.isAnimating.set(false), ANIMATION_MS);
+      this.isPageAnimating.set(true);
+      this.pageAnimationTimer = setTimeout(() => this.isPageAnimating.set(false), ANIMATION_MS);
     });
   }
 

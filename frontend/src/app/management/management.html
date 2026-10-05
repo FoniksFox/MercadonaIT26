@@ -1,7 +1,7 @@
 <div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
 <app-page-header title="Gestión" />
 
-<div class="mt-8 space-y-6">
+<div class="page-content mt-8 space-y-6">
   <div class="grid gap-4 sm:grid-cols-3">
     <app-stat-tile label="Personal en turno" icon="staff" [value]="'' + staffing().onShift" />
     <app-stat-tile label="Zonas con falta de personal" icon="alert" [value]="'' + shortZones()" />

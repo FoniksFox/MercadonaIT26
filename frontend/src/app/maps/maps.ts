@@ -1,5 +1,4 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { formatNumber } from '../core/format';
 import { seededRandom } from '../core/random';
 import { Supermarkets } from '../core/supermarkets';
@@ -26,7 +25,7 @@ const SHORT_DATE = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'sh
  */
 @Component({
   selector: 'app-maps',
-  imports: [Icon, PageHeader, RouterLink, StoreHeatmap],
+  imports: [Icon, PageHeader, StoreHeatmap],
   templateUrl: './maps.html',
   styleUrl: './maps.css',
   host: {

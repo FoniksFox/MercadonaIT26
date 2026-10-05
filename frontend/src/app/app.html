@@ -20,8 +20,7 @@
     <nav
       #nav
       class="relative flex min-h-0 gap-2 overflow-x-auto rounded-2xl bg-sidebar-panel/90 p-3 shadow-inner md:flex-1 md:flex-col md:overflow-x-visible md:overflow-y-auto"
-      [class.is-indicator-animating]="isAnimating()"
-      [class.indicator-jump]="indicatorJump()"
+      [class.indicator-fade]="indicatorFade()"
       aria-label="Navegación principal"
     >
       @if (indicator(); as box) {
@@ -83,8 +82,8 @@
 
   <main class="min-w-0 flex-1 overflow-hidden">
     <div
-      [class.content-slide-down]="isAnimating() && navigationDirection() === 'down'"
-      [class.content-slide-up]="isAnimating() && navigationDirection() === 'up'"
+      [class.content-slide-down]="isPageAnimating() && navigationDirection() === 'down'"
+      [class.content-slide-up]="isPageAnimating() && navigationDirection() === 'up'"
     >
       <router-outlet />
     </div>

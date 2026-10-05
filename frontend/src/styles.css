@@ -109,18 +109,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes tab-indicator-squeeze {
-  0% {
-    transform: scaleY(0.72);
-  }
-  45% {
-    transform: scaleY(1.08);
-  }
-  100% {
-    transform: scaleY(1);
-  }
-}
-
 .content-slide-down { animation: content-slide-down 360ms ease-out; }
 .content-slide-up { animation: content-slide-up 360ms ease-out; }
 
@@ -131,21 +119,30 @@
   border-radius: 0.75rem;
   background: var(--sidebar-indicator);
   box-shadow: 0 8px 16px rgb(6 78 59 / 0.2);
+  opacity: 1;
+  will-change: top, left, width, height;
   transition:
-    top 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    left 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    top 480ms cubic-bezier(0.4, 0, 0.2, 1),
+    left 480ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 480ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 480ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 220ms ease-in-out;
 }
 
-.is-indicator-animating .tab-active-indicator {
-  animation: tab-indicator-squeeze 360ms cubic-bezier(0.22, 1, 0.36, 1);
-  transform-origin: center;
+.indicator-fade .tab-active-indicator {
+  opacity: 0;
 }
 
-.indicator-jump .tab-active-indicator {
-  transition: none;
-  animation: none;
+.page-content {
+  will-change: transform, opacity;
+}
+
+.content-slide-down .page-content {
+  animation: content-slide-down 360ms ease-out;
+}
+
+.content-slide-up .page-content {
+  animation: content-slide-up 360ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
