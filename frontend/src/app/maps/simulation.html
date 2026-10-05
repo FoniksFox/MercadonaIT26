@@ -1,35 +1,5 @@
 <div class="mx-auto max-w-7xl px-6 py-6 md:px-8 md:py-8">
-  <app-page-header title="Mapa simulado">
-    @if (live()) {
-      <div
-        class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-sm"
-        role="group"
-        aria-label="Velocidad de la simulación"
-      >
-        @for (option of speeds; track option) {
-          <button
-            type="button"
-            class="rounded-lg px-3 py-2 tabular-nums transition-colors"
-            [class]="speed() === option ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
-            [attr.aria-pressed]="speed() === option"
-            [attr.aria-label]="'Velocidad por ' + option"
-            (click)="speed.set(option)"
-          >
-            ×{{ option }}
-          </button>
-        }
-      </div>
-
-      <button
-        type="button"
-        class="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors hover:bg-sunken"
-        (click)="restarts.set(restarts() + 1)"
-      >
-        <app-icon name="restart" class="size-4" />
-        Reiniciar simulación
-      </button>
-    }
-  </app-page-header>
+  <app-page-header title="Mapa simulado" />
 
   <div
     class="page-content relative z-30 mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm"
@@ -119,15 +89,41 @@
     [class.map-layout-fade]="isViewAnimating()"
   >
     <section class="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-      <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 class="font-semibold">{{ viewLabel() }}</h2>
-        <p class="text-sm text-ink-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
           @if (live()) {
-            Ahora
+            <div
+              class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold"
+              role="group"
+              aria-label="Velocidad de la simulación"
+            >
+              @for (option of speeds; track option) {
+                <button
+                  type="button"
+                  class="rounded-lg px-3 py-2 tabular-nums transition-colors"
+                  [class]="speed() === option ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
+                  [attr.aria-pressed]="speed() === option"
+                  [attr.aria-label]="'Velocidad por ' + option"
+                  (click)="speed.set(option)"
+                >
+                  ×{{ option }}
+                </button>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-sunken"
+              (click)="restarts.set(restarts() + 1)"
+            >
+              <app-icon name="restart" class="size-4" />
+              Reiniciar simulación
+            </button>
           } @else {
-            {{ dateRange() }}
+            <p class="text-sm text-ink-2">{{ dateRange() }}</p>
           }
-        </p>
+        </div>
       </div>
 
       <app-store-heatmap
