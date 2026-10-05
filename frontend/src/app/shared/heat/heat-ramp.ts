@@ -1,7 +1,7 @@
 // Heat colors: the brand palette from cold to hot (see colors.txt).
 
 const STOPS: readonly [at: number, rgb: readonly [number, number, number]][] = [
-  [0, [20, 158, 110]], // green
+  [0, [0, 137, 78]], // green
   [0.3, [191, 209, 72]], // yellow-green
   [0.55, [255, 161, 0]], // orange
   [0.8, [227, 58, 47]], // red
@@ -10,7 +10,7 @@ const STOPS: readonly [at: number, rgb: readonly [number, number, number]][] = [
 
 /** CSS gradient of the ramp, for legends. */
 export const HEAT_GRADIENT =
-  'linear-gradient(to right, #149e6e, #bfd148 30%, #ffa100 55%, #e33a2f 80%, #97004a)';
+  'linear-gradient(to right, #00894e, #bfd148 30%, #ffa100 55%, #e33a2f 80%, #97004a)';
 
 /** Color of a heat value in 0..1 as `[r, g, b]`. */
 export function heatColor(value: number): [number, number, number] {

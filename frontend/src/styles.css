@@ -11,7 +11,7 @@ html {
   --font-sans: "Montserrat", "Aptos", "Segoe UI", sans-serif;
 
   /* Brand palette (see colors.txt). */
-  --color-brand-green: #149e6e;
+  --color-brand-green: #00894e;
   --color-brand-yellow-green: #bfd148;
   --color-brand-orange: #ffa100;
   --color-brand-red: #e33a2f;
@@ -45,11 +45,13 @@ html {
   --ink-2: #45564c;
   --ink-3: #6b7a71;
   /*
-   * The one green of the app: Mercadona green, as given in colors.txt. Every
-   * green surface, text or mark uses exactly this value, in both themes; do
-   * not add lighter or darker greens next to it.
+   * The one green of the app: Mercadona's dark green, taken from the
+   * stylesheets of mercadona.es and tienda.mercadona.es (their
+   * --cucumber-black-20; their lighter button green is #00ab61). Every green
+   * surface, text or mark uses exactly this value, in both themes; do not add
+   * lighter or darker greens next to it.
    */
-  --green: #149e6e;
+  --green: #00894e;
   --accent: var(--green);
   --on-accent: #ffffff;
   --sidebar: var(--green);
