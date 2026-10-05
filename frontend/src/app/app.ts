@@ -23,6 +23,8 @@ interface NavigationItem {
   path: string;
   label: string;
   icon: IconName;
+  /** Pages of the section, listed under it. The entry itself then only opens the first one. */
+  pages?: readonly { path: string; label: string }[];
 }
 
 type NavigationDirection = 'up' | 'down';
@@ -59,7 +61,16 @@ export class App {
   private readonly router = inject(Router);
 
   protected readonly mainNavigation: readonly NavigationItem[] = [
-    { path: '/maps', label: 'Mapas', icon: 'map' },
+    {
+      path: '/maps',
+      label: 'Mapas',
+      icon: 'map',
+      pages: [
+        { path: '/maps', label: 'Simulación' },
+        { path: '/maps/real', label: 'Real' },
+      ],
+    },
+    { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
     { path: '/management', label: 'Gestión', icon: 'staff' },
     { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
   ];
@@ -73,12 +84,13 @@ export class App {
     abbreviateStoreName(this.supermarket().name),
   );
 
+  /** Pages of the main group, top to bottom: a section counts through its pages. */
+  private readonly mainPaths = this.mainNavigation.flatMap((item) =>
+    item.pages ? item.pages.map((page) => page.path) : [item.path],
+  );
+
   /** Entries from top to bottom, as in the sidebar: decides which way the page slides in. */
-  private readonly order = [
-    ...this.mainNavigation.map((item) => item.path),
-    this.settings.path,
-    this.storesPath,
-  ];
+  private readonly order = [...this.mainPaths, this.settings.path, this.storesPath];
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -88,10 +100,15 @@ export class App {
     { initialValue: this.router.url },
   );
 
-  /** Sidebar entry of the current page, e.g. "/settings" for a settings page. */
-  protected readonly activePath = computed(
-    () => this.order.find((path) => this.url().startsWith(path)) ?? null,
-  );
+  /**
+   * Sidebar entry of the current page: the longest one its URL starts with, so
+   * "/maps/real" wins over "/maps" and a settings page maps to "/settings".
+   */
+  protected readonly activePath = computed(() => {
+    const url = this.url();
+    const matches = this.order.filter((path) => url === path || url.startsWith(path + '/'));
+    return matches.sort((a, b) => b.length - a.length)[0] ?? null;
+  });
 
   protected readonly indicator = signal<IndicatorBox | null>(null);
   protected readonly navigationDirection = signal<NavigationDirection>('down');
@@ -168,7 +185,7 @@ export class App {
   }
 
   private groupFor(path: string): NavigationGroup {
-    return this.mainNavigation.some((item) => item.path === path) ? 'analysis' : 'account';
+    return this.mainPaths.includes(path) ? 'analysis' : 'account';
   }
 }
 

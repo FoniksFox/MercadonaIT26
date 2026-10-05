@@ -29,7 +29,9 @@ describe('App', () => {
     const root = document.documentElement;
     expect(root.classList.contains('dark')).toBe(false);
 
-    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('aside button')!.click();
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('aside button')!
+      .click();
     await fixture.whenStable();
     expect(root.classList.contains('dark')).toBe(true);
 

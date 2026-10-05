@@ -1,9 +1,15 @@
 import { Routes } from '@angular/router';
-import { Maps } from './maps/maps';
+import { Simulation } from './maps/simulation';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'maps' },
-  { path: 'maps', component: Maps, title: 'Mapas · MercaTrack' },
+  // "Mapas" has two pages, listed under it in the sidebar: the simulation and the real data.
+  { path: 'maps', pathMatch: 'full', component: Simulation, title: 'Simulación · MercaTrack' },
+  {
+    path: 'maps/real',
+    loadComponent: () => import('./maps/real').then((m) => m.RealMap),
+    title: 'Mapa real · MercaTrack',
+  },
   {
     path: 'statistics',
     loadComponent: () => import('./statistics/statistics').then((m) => m.Statistics),
@@ -22,13 +28,11 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        loadComponent: () =>
-          import('./settings/settings-general').then((m) => m.SettingsGeneral),
+        loadComponent: () => import('./settings/settings-general').then((m) => m.SettingsGeneral),
       },
       {
         path: 'test',
-        loadComponent: () =>
-          import('./settings/settings-test').then((m) => m.SettingsTest),
+        loadComponent: () => import('./settings/settings-test').then((m) => m.SettingsTest),
         title: 'Pruebas · MercaTrack',
       },
     ],

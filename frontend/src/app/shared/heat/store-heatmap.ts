@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ZONES, ZoneId, emptyZoneCounts } from '../../core/zones';
+import { paintFlow, paintPeople } from './crowd-painting';
 import { CrowdSimulator } from './crowd-simulator';
 import { FloorPlan } from './floor-plan';
 import { FlowField } from './flow-field';
@@ -19,7 +20,7 @@ import { PLAN, Point, ZONE_AREAS } from './store-layout';
 
 export type MapPeriod = 'live' | 'today' | 'week' | 'month';
 /** What is drawn over the floor plan. */
-export type MapView = 'heatmap' | 'flow' | 'occupancy';
+export type MapView = 'heatmap' | 'accumulated' | 'flow' | 'occupancy';
 
 export interface CrowdSnapshot {
   /** People in the store right now; 0 for past periods. */
@@ -34,18 +35,16 @@ const COLS = 125;
 const ROWS = 78;
 /** Blob size of one person, in cells. */
 const BLOB_RADIUS = 3.75;
-/** Minimum visible contribution from a person in each rendered simulation step. */
-const MIN_HEAT_DEPOSIT = 0.35;
-/** Share of the heat that is left after one second (live only). */
-const LIVE_RETENTION = 0.955;
-/** The flow keeps a longer memory than the heat, so the arrows stay steady. */
-const FLOW_RETENTION = 0.985;
 /** Flow cells are about 40 plan units wide, like the grid of the backend's vector field. */
 const FLOW_COLS = 25;
 const FLOW_ROWS = 16;
-/** Seconds simulated before showing a live map, so it does not start empty. */
-const WARM_UP_SECONDS = 90;
-const MIN_HOTTEST = 4;
+/**
+ * Seconds of presence painted with the hottest color until some spot has
+ * more, so the first steps of a simulation do not look like a crowd.
+ */
+const MIN_HOTTEST = 2.5;
+/** Share of the recent heat left after one second: a trail is gone in about a quarter of a minute. */
+const RECENT_RETENTION = 0.6;
 /** Simulated seconds that stand in for each past period. */
 const HISTORY_SECONDS = { today: 400, week: 900, month: 2400 } as const;
 
@@ -76,17 +75,25 @@ export class StoreHeatmap {
   readonly busyness = input(1);
   readonly period = input<MapPeriod>('live');
   readonly view = input<MapView>('heatmap');
+  /** Change its value to start the live simulation again from an empty store. */
+  readonly restart = input(0);
+  /** Simulated seconds per real second while live, e.g. 2 to go twice as fast. */
+  readonly speed = input(1);
   readonly snapshot = output<CrowdSnapshot>();
 
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
-  private readonly field = new HeatField(COLS, ROWS);
+  /** Heat of the last moments: it fades, so it follows people around. */
+  private readonly recent = new HeatField(COLS, ROWS);
+  /** Heat since the start (or over the whole past period): it only grows. */
+  private readonly total = new HeatField(COLS, ROWS);
   private readonly flow = new FlowField(FLOW_COLS, FLOW_ROWS);
   private simulator = new CrowdSimulator('');
   private lastPositions = new Map<number, Point>();
   /** Mean occupancy of a past period; live occupancy is read from the simulator. */
   private pastOccupancy = emptyZoneCounts();
   private live = true;
-  private hottest = MIN_HOTTEST;
+  private hottestRecent = MIN_HOTTEST;
+  private hottestTotal = MIN_HOTTEST;
   private needsPaint = true;
   private frameId = 0;
   private lastFrame = 0;
@@ -97,6 +104,7 @@ export class StoreHeatmap {
       const seed = this.seed();
       const busyness = this.busyness();
       const period = this.period();
+      this.restart();
       untracked(() => this.reset(seed, busyness, period));
     });
     effect(() => {
@@ -111,20 +119,23 @@ export class StoreHeatmap {
   }
 
   private reset(seed: string, busyness: number, period: MapPeriod): void {
-    this.field.clear();
+    this.recent.clear();
+    this.total.clear();
     this.flow.clear();
     this.lastPositions = new Map();
     this.simulator = new CrowdSimulator(`${seed}:${period}`, busyness);
     this.live = period === 'live';
     this.needsPaint = true;
     if (period === 'live') {
-      this.simulator.run(WARM_UP_SECONDS, 0.25, () => this.accumulate(0.25));
-      this.hottest = Math.max(MIN_HOTTEST, this.field.max());
-      this.lastSnapshot = 0;
+      // The store starts empty: people come in and the map builds up as they move.
+      this.hottestRecent = MIN_HOTTEST;
+      this.hottestTotal = MIN_HOTTEST;
+      this.lastSnapshot = performance.now();
+      this.snapshot.emit({ people: 0, byZone: emptyZoneCounts(), occupancy: emptyZoneCounts() });
     } else {
       const seconds = HISTORY_SECONDS[period];
       this.simulator.run(seconds, 0.5, () => this.deposit(0.5));
-      this.hottest = this.field.max();
+      this.hottestTotal = this.total.max();
       this.pastOccupancy = percentages(this.simulator.dwell, (zone) => seconds * zone.capacity);
       const total = Object.values(this.simulator.dwell).reduce((sum, value) => sum + value, 0);
       this.snapshot.emit({
@@ -135,19 +146,19 @@ export class StoreHeatmap {
     }
   }
 
-  /** Live: the past fades while the people present add new heat and movement. */
-  private accumulate(seconds: number): void {
-    this.field.fade(Math.pow(LIVE_RETENTION, seconds));
-    this.flow.fade(Math.pow(FLOW_RETENTION, seconds));
-    this.deposit(seconds);
-  }
-
+  /** Adds the presence and the movement of everyone in the store during `seconds`. */
   private deposit(seconds: number): void {
+    if (this.live) {
+      this.recent.fade(Math.pow(RECENT_RETENTION, seconds));
+    }
     const positions = new Map<number, Point>();
     for (const point of this.simulator.points()) {
       const x = point.x / PLAN.width;
       const y = point.y / PLAN.height;
-      this.field.add(x, y, BLOB_RADIUS, Math.max(seconds, MIN_HEAT_DEPOSIT));
+      this.total.add(x, y, BLOB_RADIUS, seconds);
+      if (this.live) {
+        this.recent.add(x, y, BLOB_RADIUS, seconds);
+      }
       const before = this.lastPositions.get(point.id);
       if (before) {
         this.flow.add(x, y, point.x - before.x, point.y - before.y);
@@ -164,13 +175,14 @@ export class StoreHeatmap {
   }
 
   private readonly frame = (now: number): void => {
-    const seconds = Math.min(0.1, (now - this.lastFrame) / 1000);
+    const seconds = Math.min(0.1, (now - this.lastFrame) / 1000) * this.speed();
     this.lastFrame = now;
     if (this.live) {
       this.simulator.tick(seconds);
-      this.accumulate(seconds);
-      // Follow the peak up at once and let it come down slowly, so colors do not flicker.
-      this.hottest = Math.max(MIN_HOTTEST, this.hottest * 0.999, this.field.max());
+      this.deposit(seconds);
+      // The recent peak is followed up at once and released slowly, so colors do not flicker.
+      this.hottestRecent = Math.max(MIN_HOTTEST, this.hottestRecent * 0.998, this.recent.max());
+      this.hottestTotal = Math.max(MIN_HOTTEST, this.total.max());
       if (now - this.lastSnapshot > 500) {
         this.lastSnapshot = now;
         this.snapshot.emit({
@@ -218,10 +230,26 @@ export class StoreHeatmap {
 
     switch (this.view()) {
       case 'heatmap':
-        this.field.paint(context, width, height, this.hottest);
+        // A past period has no "recent": it shows what the whole period accumulated.
+        if (this.live) {
+          this.recent.paint(context, width, height, this.hottestRecent);
+        } else {
+          this.total.paint(context, width, height, this.hottestTotal);
+        }
+        break;
+      case 'accumulated':
+        this.total.paint(context, width, height, this.hottestTotal);
         break;
       case 'flow':
-        this.paintFlow(context, width, height, ratio, colors.accent);
+        paintFlow(
+          context,
+          this.flow.vectors(),
+          width,
+          height,
+          width / FLOW_COLS,
+          ratio,
+          colors.accent,
+        );
         break;
       case 'occupancy':
         this.paintOccupancyTint(context, width, height, colors.accent);
@@ -229,55 +257,16 @@ export class StoreHeatmap {
     }
 
     if (this.live) {
-      // One anonymous dot per person.
       const scaleX = width / PLAN.width;
       const scaleY = height / PLAN.height;
-      context.fillStyle = '#13201a';
-      context.strokeStyle = '#ffffff';
-      context.lineWidth = 1.5 * ratio;
-      for (const point of this.simulator.points()) {
-        context.beginPath();
-        context.arc(point.x * scaleX, point.y * scaleY, 3.4 * scaleX, 0, Math.PI * 2);
-        context.fill();
-        context.stroke();
-      }
+      const people = this.simulator.points().map((p) => ({ x: p.x * scaleX, y: p.y * scaleY }));
+      paintPeople(context, people, 3.4 * scaleX, ratio);
     }
 
     if (this.view() === 'occupancy') {
       // After the dots, so no figure is hidden behind a person.
       this.paintOccupancyFigures(context, width, height, ratio, colors);
     }
-  }
-
-  /** One arrow per cell: where people mostly go and, by its length, how much. */
-  private paintFlow(
-    context: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-    ratio: number,
-    color: string,
-  ): void {
-    const cell = width / FLOW_COLS;
-    context.strokeStyle = color;
-    context.lineWidth = 2.4 * ratio;
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    for (const vector of this.flow.vectors()) {
-      const length = cell * (0.4 + 0.75 * Math.sqrt(vector.strength));
-      const head = Math.min(cell * 0.3, length * 0.45);
-      const tipX = vector.x * width + (vector.dx * length) / 2;
-      const tipY = vector.y * height + (vector.dy * length) / 2;
-      const angle = Math.atan2(vector.dy, vector.dx);
-      context.globalAlpha = 0.35 + 0.65 * vector.strength;
-      context.beginPath();
-      context.moveTo(tipX - vector.dx * length, tipY - vector.dy * length);
-      context.lineTo(tipX, tipY);
-      context.moveTo(tipX - head * Math.cos(angle - 0.5), tipY - head * Math.sin(angle - 0.5));
-      context.lineTo(tipX, tipY);
-      context.lineTo(tipX - head * Math.cos(angle + 0.5), tipY - head * Math.sin(angle + 0.5));
-      context.stroke();
-    }
-    context.globalAlpha = 1;
   }
 
   /** Each zone tinted by how full it is. */
@@ -295,7 +284,13 @@ export class StoreHeatmap {
       const area = ZONE_AREAS[zone.id];
       context.globalAlpha = 0.1 + 0.6 * (occupancy[zone.id] / 100);
       context.beginPath();
-      context.roundRect(area.x * scaleX, area.y * scaleY, area.w * scaleX, area.h * scaleY, 8 * scaleX);
+      context.roundRect(
+        area.x * scaleX,
+        area.y * scaleY,
+        area.w * scaleX,
+        area.h * scaleY,
+        8 * scaleX,
+      );
       context.fill();
     }
     context.globalAlpha = 1;

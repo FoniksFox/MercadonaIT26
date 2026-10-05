@@ -14,8 +14,8 @@ import { ZONES } from '../core/zones';
 import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
 import { CrowdSnapshot, MapPeriod, MapView, StoreHeatmap } from '../shared/heat/store-heatmap';
 import { Icon } from '../shared/icon';
-import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
+import { IconName } from '../shared/icons';
 
 const DAYS = { today: 1, week: 7, month: 30 } as const;
 /** Opening hours used to scale today's placeholder totals. */
@@ -28,25 +28,31 @@ const QUEUE_FROM = 5;
 const SHORT_DATE = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
 
 /**
- * Home screen: the selected store over its floor plan, as heat, flow or
- * occupancy, live or over a past period.
+ * Simulated store: made-up shoppers walk a placeholder floor plan, shown as
+ * heat, flow or occupancy. Live it starts empty and builds up as they move;
+ * past periods are shown already accumulated.
  */
 @Component({
-  selector: 'app-maps',
+  selector: 'app-simulation',
   imports: [Icon, PageHeader, StoreHeatmap],
-  templateUrl: './maps.html',
-  styleUrl: './maps.css',
+  templateUrl: './simulation.html',
+  styleUrl: './simulation.css',
   host: {
     '(document:click)': 'closeMenuIfOutside($event)',
     '(keydown.escape)': 'menuOpen.set(false)',
   },
 })
-export class Maps {
+export class Simulation {
   protected readonly supermarket = inject(Supermarkets).current;
 
   protected readonly view = signal<MapView>('heatmap');
   protected readonly period = signal<MapPeriod>('live');
   protected readonly menuOpen = signal(false);
+  /** Bumped by "Reiniciar simulación": the live map starts again from an empty store. */
+  protected readonly restarts = signal(0);
+  /** How many simulated seconds pass per real second. */
+  protected readonly speed = signal(1);
+  protected readonly speeds = [1, 2] as const;
   protected readonly snapshot = signal<CrowdSnapshot | null>(null);
   protected readonly isViewAnimating = signal(false);
   private viewAnimationTimer?: ReturnType<typeof setTimeout>;
@@ -54,6 +60,7 @@ export class Maps {
   protected readonly heatGradient = HEAT_GRADIENT;
   protected readonly views: readonly { id: MapView; label: string; icon: IconName }[] = [
     { id: 'heatmap', label: 'Mapa de calor', icon: 'flame' },
+    { id: 'accumulated', label: 'Calor acumulado', icon: 'layers' },
     { id: 'flow', label: 'Mapa de flujo', icon: 'wind' },
     { id: 'occupancy', label: 'Ocupación', icon: 'layout' },
   ];
@@ -121,9 +128,13 @@ export class Maps {
     }));
   });
 
+  /** The zone with the highest figure; none while every zone is at zero. */
   protected readonly busiest = computed(() => {
-    const rows = this.zoneRows();
-    return rows.length ? rows.reduce((top, row) => (row.value > top.value ? row : top)) : null;
+    const top = this.zoneRows().reduce<ReturnType<typeof this.zoneRows>[number] | null>(
+      (best, row) => (row.value > (best?.value ?? 0) ? row : best),
+      null,
+    );
+    return top;
   });
 
   protected readonly alerts = computed(() => {
@@ -157,6 +168,18 @@ export class Maps {
   protected choose(period: MapPeriod): void {
     this.period.set(period);
     this.menuOpen.set(false);
+  }
+
+  /**
+   * Click (or keyboard, or touch) on "Histórico": from live it shows today
+   * straight away, and the menu stays open to pick another period. Hovering
+   * only opens the menu.
+   */
+  protected openPast(): void {
+    if (this.live()) {
+      this.period.set('today');
+    }
+    this.menuOpen.set(true);
   }
 
   protected selectView(view: MapView): void {
