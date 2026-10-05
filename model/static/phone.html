@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Camera Source</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; background: #111; color: white; text-align: center; }
+        video { width: 100%; max-width: 600px; border-radius: 8px; background: #222; margin-bottom: 20px; transform: scaleX(-1); }
+        button { padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; background: #28a745; color: white; cursor: pointer; font-weight: bold; width: 100%; max-width: 600px; }
+        button.stop { background: #dc3545; }
+        #status { margin: 15px 0; padding: 10px; border-radius: 8px; background: #333; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 8px; }
+        .connected { background: #28a745; }
+    </style>
+</head>
+<body>
+    <h2>Cámara</h2>
+    <div id="status"><span class="indicator" id="indicator"></span> <span id="status-text">Desconectado</span></div>
+    <video id="video" autoplay playsinline muted></video>
+    <button id="toggleBtn">Empezar transmisión</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const statusText = document.getElementById('status-text');
+        const indicator = document.getElementById('indicator');
+
+        let ws = null;
+        let isStreaming = false;
+        
+        const TARGET_FPS = 15; 
+        const frameInterval = 1000 / TARGET_FPS;
+        let lastSendTime = 0;
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Camera access denied or unavailable. " + err);
+            }
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/v1/stream`);
+            
+            ws.onopen = () => {
+                statusText.innerText = `Conectado a ${window.location.host}`;
+                indicator.classList.add('connected');
+                startSendingFrames();
+            };
+            ws.onclose = () => {
+                statusText.innerText = "Desconectado";
+                indicator.classList.remove('connected');
+                if(isStreaming) setTimeout(connectWebSocket, 2000);
+            };
+        }
+
+        function startSendingFrames() {
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            const sendFrame = (timestamp) => {
+                if (!lastSendTime) lastSendTime = timestamp;
+                const elapsed = timestamp - lastSendTime;
+
+                if (elapsed > frameInterval && ws && ws.readyState === WebSocket.OPEN && video.readyState === video.HAVE_ENOUGH_DATA) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        if (blob) ws.send(blob);
+                    }, 'image/jpeg', 0.5);
+                    lastSendTime = timestamp;
+                }
+                if (isStreaming) requestAnimationFrame(sendFrame);
+            };
+            requestAnimationFrame(sendFrame);
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            if (!isStreaming) {
+                isStreaming = true;
+                toggleBtn.innerText = "Dejar de transmitir";
+                toggleBtn.classList.add('stop');
+                connectWebSocket();
+            } else {
+                isStreaming = false;
+                toggleBtn.innerText = "Empezar a transmitir";
+                toggleBtn.classList.remove('stop');
+                if (ws) ws.close();
+            }
+        });
+
+        initCamera();
+    </script>
+</body>
+</html>
