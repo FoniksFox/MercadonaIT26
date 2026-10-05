@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Light is the default theme; dark is opt-in through the .dark class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -68,9 +72,9 @@
   --ink-3: #8a988f;
   --accent: #1aa877;
   --on-accent: #06140e;
-  --sidebar: #0a1a13;
-  --sidebar-panel: #11291f;
-  --sidebar-indicator: #168c64;
+  --sidebar: #063a2b;
+  --sidebar-panel: #07513b;
+  --sidebar-indicator: #0b7654;
   --series: #1aa877;
   --grid: #24312b;
   --seq-low: #1b2621;
@@ -96,6 +100,17 @@
   input[type="checkbox"] {
     accent-color: var(--accent);
   }
+}
+
+/* Apply the theme change to all color surfaces without affecting layout animations. */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow,
+    text-decoration-color;
+  transition-duration: 120ms;
+  transition-timing-function: ease-in-out;
 }
 
 /* The page slides in from the side of the sidebar entry it comes from. */
@@ -155,10 +170,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after,
   .content-slide-down,
   .content-slide-up,
   .tab-active-indicator {
     animation: none;
-    transition: none;
+    transition: none !important;
   }
 }

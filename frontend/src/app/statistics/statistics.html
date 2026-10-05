@@ -1,25 +1,26 @@
 <div class="mx-auto max-w-7xl px-6 py-6 md:px-8 md:py-8">
-<app-page-header title="Estadísticas">
-  <div
-    class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-sm"
-    role="group"
-    aria-label="Periodo"
-  >
-    @for (option of ranges; track option.id) {
-      <button
-        type="button"
-        class="rounded-lg px-3 py-2 transition-colors"
-        [class]="range() === option.id ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
-        [attr.aria-pressed]="range() === option.id"
-        (click)="range.set(option.id)"
-      >
-        {{ option.label }}
-      </button>
-    }
-  </div>
-</app-page-header>
+<app-page-header title="Estadísticas" />
 
-<div class="page-content mt-8 space-y-6">
+<nav
+  class="page-content mt-6 flex gap-6 border-b border-line text-sm font-semibold"
+  aria-label="Periodo de estadísticas"
+  role="tablist"
+>
+  @for (option of ranges; track option.id) {
+    <button
+      type="button"
+      role="tab"
+      class="-mb-px border-b-2 pb-3"
+      [class]="range() === option.id ? 'border-accent text-ink' : 'border-transparent text-ink-2 hover:text-ink'"
+      [attr.aria-selected]="range() === option.id"
+      (click)="range.set(option.id)"
+    >
+      {{ option.label }}
+    </button>
+  }
+</nav>
+
+<div class="page-content mt-6 space-y-6">
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <app-stat-tile
       label="Visitantes"

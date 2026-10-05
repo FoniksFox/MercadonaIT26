@@ -52,7 +52,7 @@ import { IconName } from '../shared/icons';
                   : 'border-line hover:border-ink-3'
               "
               [attr.aria-checked]="theme.mode() === option.mode"
-              (click)="theme.mode.set(option.mode)"
+              (click)="theme.set(option.mode)"
             >
               <app-icon [name]="option.icon" class="size-5" />
               {{ option.label }}

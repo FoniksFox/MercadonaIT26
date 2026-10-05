@@ -4,11 +4,13 @@ import { readStored, writeStored } from './browser-storage';
 export type ThemeMode = 'light' | 'dark';
 
 const STORAGE_KEY = 'mercatrack.theme';
+const THEME_TRANSITION_MS = 120;
 
 /** Light by default; the choice is remembered on this device. */
 @Service()
 export class Theme {
   private readonly document = inject(DOCUMENT);
+  private transitionTimer?: ReturnType<typeof setTimeout>;
 
   readonly mode = signal<ThemeMode>(readStored(STORAGE_KEY) === 'dark' ? 'dark' : 'light');
 
@@ -21,6 +23,23 @@ export class Theme {
   }
 
   toggle(): void {
-    this.mode.update((mode) => (mode === 'dark' ? 'light' : 'dark'));
+    this.set(this.mode() === 'dark' ? 'light' : 'dark');
+  }
+
+  set(mode: ThemeMode): void {
+    if (mode === this.mode()) {
+      return;
+    }
+    this.startTransition();
+    this.mode.set(mode);
+  }
+
+  private startTransition(): void {
+    const root = this.document.documentElement;
+    root.classList.add('theme-transition');
+    clearTimeout(this.transitionTimer);
+    this.transitionTimer = setTimeout(() => {
+      root.classList.remove('theme-transition');
+    }, THEME_TRANSITION_MS);
   }
 }

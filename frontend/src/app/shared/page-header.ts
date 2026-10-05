@@ -13,9 +13,9 @@ import { Supermarkets } from '../core/supermarkets';
       <div>
         <h1 class="page-title mt-2 text-4xl font-bold tracking-tight">{{ title() }}</h1>
       </div>
-      <div class="flex items-end gap-6">
+      <div class="ml-auto flex items-end gap-6">
         <div class="flex flex-wrap items-center gap-3"><ng-content /></div>
-        <p class="store-heading font-serif text-right text-3xl font-normal italic leading-tight text-accent">
+        <p class="store-heading shrink-0 whitespace-nowrap font-serif text-right text-3xl font-normal italic leading-tight text-accent">
           Mercadona {{ supermarket().name }}
         </p>
       </div>

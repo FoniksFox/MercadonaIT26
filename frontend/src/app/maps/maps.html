@@ -2,7 +2,7 @@
   <app-page-header title="Mapas" />
 
   <div
-    class="page-content mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm"
+    class="page-content relative z-30 mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm"
     role="group"
     aria-label="Vistas del mapa"
   >
@@ -19,7 +19,7 @@
         {{ option.label }}
       </button>
     }
-    <div class="ml-auto flex items-center gap-2">
+    <div class="relative z-40 ml-auto flex items-center gap-2">
         <button
           type="button"
           class="map-view-tab"
@@ -30,24 +30,29 @@
           <span class="size-2 rounded-full" [class]="live() ? 'animate-pulse bg-current' : 'bg-brand-red'"></span>
           En vivo
         </button>
-        <div class="relative" #menu>
+        <div
+          class="relative"
+          #menu
+          (mouseenter)="menuOpen.set(true)"
+          (mouseleave)="menuOpen.set(false)"
+        >
           <button
             type="button"
             class="map-view-tab"
             [class.map-view-tab-active]="!live()"
             aria-haspopup="menu"
             [attr.aria-expanded]="menuOpen()"
-            (click)="openPast()"
+            (click)="$event.stopPropagation()"
           >
             <app-icon name="history" class="size-4" />
             {{ pastLabel() }}
             <app-icon name="chevron-down" class="size-4" />
           </button>
           @if (menuOpen()) {
-            <div role="menu" aria-label="Histórico" class="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-line bg-surface p-1 font-medium shadow-lg">
+            <div role="menu" aria-label="Histórico" class="absolute right-0 top-full z-50 w-48 rounded-xl border border-line bg-surface p-1 font-medium shadow-lg">
               @for (option of pastPeriods; track option.id) {
-                <button type="button" role="menuitemradio" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-ink hover:bg-sunken" [attr.aria-checked]="period() === option.id" (click)="choose(option.id)">
-                  <app-icon name="check" class="size-4" [class.invisible]="period() !== option.id" />
+                <button type="button" role="menuitemradio" class="relative flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-ink hover:bg-sunken" [attr.aria-checked]="period() === option.id" (click)="choose(option.id)">
+                  <app-icon name="check" class="absolute left-3 size-4" [class.invisible]="period() !== option.id" />
                   {{ option.label }}
                 </button>
               }

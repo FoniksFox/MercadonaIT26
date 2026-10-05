@@ -172,16 +172,6 @@ export class Maps {
     });
   }
 
-  /** From live, "Histórico" shows today straight away and offers the other periods. */
-  protected openPast(): void {
-    if (this.live()) {
-      this.period.set('today');
-      this.menuOpen.set(true);
-    } else {
-      this.menuOpen.update((open) => !open);
-    }
-  }
-
   protected closeMenuIfOutside(event: Event): void {
     if (this.menuOpen() && !this.menu()?.nativeElement.contains(event.target as Node)) {
       this.menuOpen.set(false);
