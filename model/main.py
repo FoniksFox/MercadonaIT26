@@ -24,6 +24,7 @@ demo_clients: Set[WebSocket] = set()
 class ConfigUpdate(BaseModel):
     processing_enabled: Optional[bool] = None
     show_heatmap: Optional[bool] = None
+    show_pheat: Optional[bool] = None
     show_boxes: Optional[bool] = None
     show_flow: Optional[bool] = None
     heatmap_only: Optional[bool] = None
@@ -65,7 +66,7 @@ async def processing_loop():
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
             
             if frame is not None:
-                raw_img, heat_img, flow_img, stats, points = await asyncio.to_thread(processor.process_frame, frame)
+                raw_img, heat_img, flow_img, pheat_img, stats, points = await asyncio.to_thread(processor.process_frame, frame)
                 
                 if heatmap_clients:
                     heatmap_payload = json.dumps({
@@ -88,11 +89,17 @@ async def processing_loop():
                     if flow_img is not None:
                         _, buf_flow = cv2.imencode('.jpg', flow_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
                         b64_flow = base64.b64encode(buf_flow).decode('utf-8')
+                        
+                    b64_pheat = None
+                    if pheat_img is not None:
+                        _, buf_pheat = cv2.imencode('.jpg', pheat_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+                        b64_pheat = base64.b64encode(buf_pheat).decode('utf-8')
                     
                     demo_payload = json.dumps({
                         'image_raw': b64_raw,
                         'image_heat': b64_heat,
-                        'image_flow': b64_flow
+                        'image_flow': b64_flow,
+                        'image_persistent_heat': b64_pheat
                     })
                     await broadcast_ws(demo_clients, demo_payload)
 

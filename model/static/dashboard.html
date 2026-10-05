@@ -233,9 +233,15 @@
                 </div>
             </div>
             <div class="feed-card" id="card-flow">
-                <div class="feed-header">Mapa de flujos (Vector Field)</div>
+                <div class="feed-header">Mapa de flujos (vectores)</div>
                 <div class="stream-container">
                     <img id="stream-flow" src="" alt="Esperando señal...">
+                </div>
+            </div>
+            <div class="feed-card" id="card-pheat">
+                <div class="feed-header">Mapa de calor persistente</div>
+                <div class="stream-container">
+                    <img id="stream-pheat" src="" alt="Esperando señal...">
                 </div>
             </div>
         </div>
@@ -275,6 +281,10 @@
             <label class="toggle-row">
                 <input type="checkbox" id="ctrl-heatmap" checked>
                 Mostrar mapa de calor
+            </label>
+            <label class="toggle-row">
+                <input type="checkbox" id="ctrl-pheat" checked>
+                Mostrar calor persistente
             </label>
             <label class="toggle-row">
                 <input type="checkbox" id="ctrl-flow" checked>
@@ -325,9 +335,11 @@
         const imgRaw = document.getElementById('stream-raw');
         const imgHeat = document.getElementById('stream-heat');
         const imgFlow = document.getElementById('stream-flow');
+        const imgPHeat = document.getElementById('stream-pheat');
         const cardRaw = document.getElementById('card-raw');
         const cardHeat = document.getElementById('card-heat');
         const cardFlow = document.getElementById('card-flow');
+        const cardPHeat = document.getElementById('card-pheat');
         const wsDot = document.getElementById('ws-dot');
         const wsText = document.getElementById('ws-text');
         
@@ -371,6 +383,7 @@
                 if (data.image_raw) imgRaw.src = 'data:image/jpeg;base64,' + data.image_raw;
                 if (data.image_heat) imgHeat.src = 'data:image/jpeg;base64,' + data.image_heat;
                 if (data.image_flow) imgFlow.src = 'data:image/jpeg;base64,' + data.image_flow;
+                if (data.image_persistent_heat) imgPHeat.src = 'data:image/jpeg;base64,' + data.image_persistent_heat;
             };
         }
 
@@ -378,6 +391,7 @@
             cardRaw.style.display = document.getElementById('ctrl-camera').checked ? 'flex' : 'none';
             cardHeat.style.display = document.getElementById('ctrl-heatmap').checked ? 'flex' : 'none';
             cardFlow.style.display = document.getElementById('ctrl-flow').checked ? 'flex' : 'none';
+            cardPHeat.style.display = document.getElementById('ctrl-pheat').checked ? 'flex' : 'none';
 
             await fetch('/api/v1/config', {
                 method: 'PATCH',
@@ -385,6 +399,7 @@
                 body: JSON.stringify({
                     processing_enabled: document.getElementById('ctrl-processing').checked,
                     show_heatmap: document.getElementById('ctrl-heatmap').checked,
+                    show_pheat: document.getElementById('ctrl-pheat').checked,
                     show_flow: document.getElementById('ctrl-flow').checked,
                     show_boxes: document.getElementById('ctrl-boxes').checked,
                     decay: parseFloat(document.getElementById('ctrl-decay').value),
