@@ -17,7 +17,7 @@ describe('App', () => {
 
     expect(sidebar.textContent).toContain('MercaTrack');
     const links = [...sidebar.querySelectorAll('nav a')].map((link) => link.textContent?.trim());
-    expect(links.slice(0, 4)).toEqual(['Mapas', 'Estadísticas', 'Gestión', 'Configuración']);
+    expect(links.slice(0, 4)).toEqual(['Mapas', 'Gestión', 'Estadísticas', 'Configuración']);
     expect(links[4]).toContain('Valencia Centro');
     expect(links[4]).toContain('Cambiar de Mercadona');
   });

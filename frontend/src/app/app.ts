@@ -37,6 +37,13 @@ interface IndicatorBox {
 }
 
 const ANIMATION_MS = 280;
+const SIDEBAR_NAME_LIMIT = 16;
+const STORE_NAME_ABBREVIATIONS: Readonly<Record<string, string>> = {
+  'Valencia Campanar': 'Vlc. Campanar',
+};
+const STORE_WORD_ABBREVIATIONS: Readonly<Record<string, string>> = {
+  Valencia: 'Vlc.',
+};
 
 /** Dashboard shell: sidebar with the views on the left, the current view on the right. */
 @Component({
@@ -53,8 +60,8 @@ export class App {
 
   protected readonly mainNavigation: readonly NavigationItem[] = [
     { path: '/maps', label: 'Mapas', icon: 'map' },
-    { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
     { path: '/management', label: 'Gestión', icon: 'staff' },
+    { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
   ];
   protected readonly settings: NavigationItem = {
     path: '/settings',
@@ -62,6 +69,9 @@ export class App {
     icon: 'gear',
   };
   protected readonly storesPath = '/stores';
+  protected readonly sidebarStoreName = computed(() =>
+    abbreviateStoreName(this.supermarket().name),
+  );
 
   /** Entries from top to bottom, as in the sidebar: decides which way the page slides in. */
   private readonly order = [
@@ -160,4 +170,29 @@ export class App {
   private groupFor(path: string): NavigationGroup {
     return this.mainNavigation.some((item) => item.path === path) ? 'analysis' : 'account';
   }
+}
+
+function abbreviateStoreName(name: string): string {
+  const abbreviation = STORE_NAME_ABBREVIATIONS[name];
+  if (abbreviation) {
+    return abbreviation;
+  }
+
+  if (name.length <= SIDEBAR_NAME_LIMIT) {
+    return name;
+  }
+
+  return name
+    .split(' ')
+    .map((word, index) => {
+      const knownAbbreviation = STORE_WORD_ABBREVIATIONS[word];
+      if (knownAbbreviation) {
+        return knownAbbreviation;
+      }
+      if (index === 0) {
+        return `${word.slice(0, 3)}.`;
+      }
+      return `${word.slice(0, 4)}.`;
+    })
+    .join(' ');
 }
