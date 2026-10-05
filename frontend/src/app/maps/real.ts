@@ -11,6 +11,7 @@ import {
 import { BackendConnection, ChannelStatus } from '../core/backend-connection';
 import { BackendFrame, jpegSource } from '../core/backend-protocol';
 import { formatNumber } from '../core/format';
+import { ZoneId, ZONES, zonePercentages } from '../core/zones';
 import { paintFlow, paintPeople, paintWalkedFloor } from '../shared/heat/crowd-painting';
 import { FlowField } from '../shared/heat/flow-field';
 import { HeatField } from '../shared/heat/heat-field';
@@ -18,6 +19,7 @@ import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
 import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
+import { PLAN, ZONE_AREAS } from '../shared/heat/store-layout';
 
 type RealView = 'heatmap' | 'flow' | 'occupancy';
 
@@ -275,6 +277,7 @@ export class RealMap {
 
     const style = getComputedStyle(canvas);
     const accent = style.getPropertyValue('--accent').trim();
+    const frame = this.backend.frame();
     if (!this.showCamera()) {
       // Without the camera, draw the floor that the movement itself reveals.
       paintWalkedFloor(
@@ -310,11 +313,12 @@ export class RealMap {
         );
         break;
       case 'occupancy':
-        this.recent.paint(context, width, height, this.hottestRecent);
+        if (frame) {
+          this.paintOccupancy(context, frame, width, height, ratio, accent, style.fontFamily);
+        }
         break;
     }
 
-    const frame = this.backend.frame();
     if (!frame) {
       return;
     }
@@ -347,6 +351,76 @@ export class RealMap {
       ratio,
     );
   };
+
+  private paintOccupancy(
+    context: CanvasRenderingContext2D,
+    frame: BackendFrame,
+    width: number,
+    height: number,
+    ratio: number,
+    color: string,
+    fontFamily: string,
+  ): void {
+    const occupancy = this.occupancy(frame);
+    const scaleX = width / PLAN.width;
+    const scaleY = height / PLAN.height;
+
+    context.fillStyle = color;
+    for (const zone of ZONES) {
+      const area = ZONE_AREAS[zone.id];
+      context.globalAlpha = 0.1 + 0.6 * (occupancy[zone.id] / 100);
+      context.beginPath();
+      context.roundRect(
+        area.x * scaleX,
+        area.y * scaleY,
+        area.w * scaleX,
+        area.h * scaleY,
+        8 * scaleX,
+      );
+      context.fill();
+    }
+    context.globalAlpha = 1;
+
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.font = `700 ${Math.round(20 * scaleX)}px ${fontFamily}`;
+    context.lineJoin = 'round';
+    context.strokeStyle = '#ffffff';
+    context.lineWidth = 5 * ratio;
+    context.fillStyle = '#13201a';
+    for (const zone of ZONES) {
+      const area = ZONE_AREAS[zone.id];
+      const label = area.label ?? { x: area.x + area.w / 2, y: area.y + area.h / 2 };
+      const text = `${occupancy[zone.id]} %`;
+      context.strokeText(text, label.x * scaleX, label.y * scaleY);
+      context.fillText(text, label.x * scaleX, label.y * scaleY);
+    }
+  }
+
+  private occupancy(frame: BackendFrame): Record<ZoneId, number> {
+    const standing = Object.fromEntries(ZONES.map((zone) => [zone.id, 0])) as Record<ZoneId, number>;
+    const frameWidth = this.frameSize().width;
+    const frameHeight = this.frameSize().height;
+
+    for (const point of frame.points) {
+      const x = (point.x / frameWidth) * PLAN.width;
+      const y = (point.y / frameHeight) * PLAN.height;
+      const zone = ZONES.find((candidate) => {
+        const area = ZONE_AREAS[candidate.id];
+        return (
+          x >= area.x &&
+          x <= area.x + area.w &&
+          y >= area.y &&
+          y <= area.y + area.h
+        );
+      });
+      if (zone) {
+        standing[zone.id] += 1;
+      }
+    }
+
+    return zonePercentages(standing, (zone) => zone.capacity);
+  }
 
   /** Dot and text for the state of a channel; `receivingText` is what to say while messages arrive. */
   private describe(status: ChannelStatus, receivingText: string): { dot: string; text: string } {
