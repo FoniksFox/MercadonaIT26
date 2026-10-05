@@ -25,12 +25,15 @@ class ConfigUpdate(BaseModel):
     processing_enabled: Optional[bool] = None
     show_heatmap: Optional[bool] = None
     show_boxes: Optional[bool] = None
+    show_flow: Optional[bool] = None
     heatmap_only: Optional[bool] = None
     intensity: Optional[float] = None
     radius: Optional[int] = None
     decay: Optional[float] = None
+    flow_decay: Optional[float] = None
     confidence: Optional[float] = None
     resolution: Optional[int] = None
+
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -62,7 +65,7 @@ async def processing_loop():
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
             
             if frame is not None:
-                raw_img, heat_img, stats, points = await asyncio.to_thread(processor.process_frame, frame)
+                raw_img, heat_img, flow_img, stats, points = await asyncio.to_thread(processor.process_frame, frame)
                 
                 if heatmap_clients:
                     heatmap_payload = json.dumps({
@@ -80,12 +83,19 @@ async def processing_loop():
                     if heat_img is not None:
                         _, buf_heat = cv2.imencode('.jpg', heat_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
                         b64_heat = base64.b64encode(buf_heat).decode('utf-8')
+
+                    b64_flow = None
+                    if flow_img is not None:
+                        _, buf_flow = cv2.imencode('.jpg', flow_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+                        b64_flow = base64.b64encode(buf_flow).decode('utf-8')
                     
                     demo_payload = json.dumps({
                         'image_raw': b64_raw,
-                        'image_heat': b64_heat
+                        'image_heat': b64_heat,
+                        'image_flow': b64_flow
                     })
                     await broadcast_ws(demo_clients, demo_payload)
+
                 
         except Exception as e:
             print(e)

@@ -1,24 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Camera Source</title>
+    <title>Fuente de Vídeo - MercaFlow</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background: #111; color: white; text-align: center; }
-        video { width: 100%; max-width: 600px; border-radius: 8px; background: #222; margin-bottom: 20px; transform: scaleX(-1); }
-        button { padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; background: #28a745; color: white; cursor: pointer; font-weight: bold; width: 100%; max-width: 600px; }
-        button.stop { background: #dc3545; }
-        #status { margin: 15px 0; padding: 10px; border-radius: 8px; background: #333; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 8px; }
-        .connected { background: #28a745; }
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: #111; 
+            color: white; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 { margin-top: 0; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #333;
+            color: #bbb;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #0ea5e9;
+            color: white;
+            border-color: #0ea5e9;
+        }
+
+        #filePanel {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+        }
+        .file-dropzone {
+            display: block;
+            border: 2px dashed #444;
+            padding: 20px;
+            border-radius: 8px;
+            background: #18181b;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .file-dropzone:hover {
+            border-color: #0ea5e9;
+        }
+        .file-dropzone span {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        video { 
+            width: 100%; 
+            max-width: 600px; 
+            border-radius: 8px; 
+            background: #18181b; 
+            margin-bottom: 15px; 
+            aspect-ratio: 4/3;
+            object-fit: contain;
+        }
+        video.mirrored {
+            transform: scaleX(-1);
+        }
+
+        button.action-btn { 
+            padding: 15px 30px; 
+            font-size: 18px; 
+            border: none; 
+            border-radius: 8px; 
+            background: #10b981; 
+            color: white; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            max-width: 600px; 
+            transition: background 0.2s;
+        }
+        button.action-btn:hover { background: #059669; }
+        button.action-btn.stop { background: #ef4444; }
+        button.action-btn.stop:hover { background: #dc2626; }
+
+        #status { 
+            margin: 15px 0; 
+            padding: 10px; 
+            border-radius: 8px; 
+            background: #18181b; 
+            border: 1px solid #27272a;
+            width: 100%; 
+            max-width: 600px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .indicator { 
+            display: inline-block; 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+            background: #ef4444; 
+            margin-right: 8px; 
+        }
+        .connected { background: #10b981; }
+
+        .file-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #a1a1aa;
+        }
     </style>
 </head>
 <body>
-    <h2>Cámara</h2>
-    <div id="status"><span class="indicator" id="indicator"></span> <span id="status-text">Desconectado</span></div>
-    <video id="video" autoplay playsinline muted></video>
-    <button id="toggleBtn">Empezar transmisión</button>
+    <h2>Fuente de Entrada</h2>
+
+    <!-- Selector de modo -->
+    <div class="tabs">
+        <button id="btnModeCam" class="tab-btn active" type="button">📹 Cámara en vivo</button>
+        <button id="btnModeFile" class="tab-btn" type="button">📁 Vídeo pregrabado</button>
+    </div>
+
+    <!-- Panel de carga de archivo -->
+    <div id="filePanel">
+        <label class="file-dropzone" for="videoFileInput">
+            <span id="fileLabel">📁 Haz clic aquí para cargar un archivo de vídeo (.mp4, .webm, etc.)</span>
+            <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
+        </label>
+        <div class="file-controls">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <input type="checkbox" id="loopVideoCheck" checked> Repetir vídeo en bucle
+            </label>
+            <span id="fileStatus">Ningún archivo cargado</span>
+        </div>
+    </div>
+
+    <div id="status">
+        <span class="indicator" id="indicator"></span> 
+        <span id="status-text">Desconectado</span>
+    </div>
+
+    <video id="video" class="mirrored" autoplay playsinline muted></video>
+    <button id="toggleBtn" class="action-btn">Empezar transmisión</button>
     <canvas id="canvas" style="display: none;"></canvas>
 
     <script>
@@ -29,8 +170,18 @@
         const statusText = document.getElementById('status-text');
         const indicator = document.getElementById('indicator');
 
+        const btnModeCam = document.getElementById('btnModeCam');
+        const btnModeFile = document.getElementById('btnModeFile');
+        const filePanel = document.getElementById('filePanel');
+        const videoFileInput = document.getElementById('videoFileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const fileStatus = document.getElementById('fileStatus');
+        const loopVideoCheck = document.getElementById('loopVideoCheck');
+
         let ws = null;
         let isStreaming = false;
+        let currentMode = 'camera'; // 'camera' | 'file'
+        let cameraStream = null;
         
         const TARGET_FPS = 15; 
         const frameInterval = 1000 / TARGET_FPS;
@@ -38,43 +189,100 @@
 
         async function initCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                }
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } 
                 });
-                video.srcObject = stream;
+                video.srcObject = cameraStream;
+                video.classList.add('mirrored');
+                video.controls = false;
+                video.play();
             } catch (err) {
-                alert("Camera access denied or unavailable. " + err);
+                alert("No se pudo acceder a la cámara: " + err);
             }
         }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            video.srcObject = null;
+        }
+
+        // Cambio de pestaña / modo
+        btnModeCam.addEventListener('click', () => {
+            if (currentMode === 'camera') return;
+            currentMode = 'camera';
+            btnModeCam.classList.add('active');
+            btnModeFile.classList.remove('active');
+            filePanel.style.display = 'none';
+
+            video.removeAttribute('src');
+            initCamera();
+        });
+
+        btnModeFile.addEventListener('click', () => {
+            if (currentMode === 'file') return;
+            currentMode = 'file';
+            btnModeFile.classList.add('active');
+            btnModeCam.classList.remove('active');
+            filePanel.style.display = 'block';
+
+            stopCamera();
+            video.classList.remove('mirrored');
+            video.controls = true;
+        });
+
+        // Carga de archivo de vídeo
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            video.loop = loopVideoCheck.checked;
+            video.muted = true;
+            fileLabel.textContent = `🎬 ${file.name}`;
+            fileStatus.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+            video.play();
+        });
+
+        loopVideoCheck.addEventListener('change', () => {
+            video.loop = loopVideoCheck.checked;
+        });
 
         function connectWebSocket() {
             const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
             ws = new WebSocket(`${protocol}//${window.location.host}/ws/v1/stream`);
             
             ws.onopen = () => {
-                statusText.innerText = `Conectado a ${window.location.host}`;
+                statusText.innerText = `Conectado al servidor (${currentMode === 'camera' ? 'Cámara' : 'Archivo'})`;
                 indicator.classList.add('connected');
                 startSendingFrames();
             };
             ws.onclose = () => {
                 statusText.innerText = "Desconectado";
                 indicator.classList.remove('connected');
-                if(isStreaming) setTimeout(connectWebSocket, 2000);
+                if (isStreaming) setTimeout(connectWebSocket, 2000);
             };
         }
 
         function startSendingFrames() {
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-
             const sendFrame = (timestamp) => {
                 if (!lastSendTime) lastSendTime = timestamp;
                 const elapsed = timestamp - lastSendTime;
 
-                if (elapsed > frameInterval && ws && ws.readyState === WebSocket.OPEN && video.readyState === video.HAVE_ENOUGH_DATA) {
+                const hasData = video.readyState >= 2 && !video.paused && !video.ended;
+                
+                if (elapsed > frameInterval && ws && ws.readyState === WebSocket.OPEN && hasData) {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     canvas.toBlob(blob => {
-                        if (blob) ws.send(blob);
+                        if (blob && ws.readyState === WebSocket.OPEN) ws.send(blob);
                     }, 'image/jpeg', 0.5);
                     lastSendTime = timestamp;
                 }
@@ -85,18 +293,24 @@
 
         toggleBtn.addEventListener('click', () => {
             if (!isStreaming) {
+                if (currentMode === 'file' && !video.src && (!video.currentSrc || video.currentSrc === '')) {
+                    alert("Por favor selecciona primero un archivo de vídeo.");
+                    return;
+                }
                 isStreaming = true;
                 toggleBtn.innerText = "Dejar de transmitir";
                 toggleBtn.classList.add('stop');
+                video.play();
                 connectWebSocket();
             } else {
                 isStreaming = false;
-                toggleBtn.innerText = "Empezar a transmitir";
+                toggleBtn.innerText = "Empezar transmisión";
                 toggleBtn.classList.remove('stop');
                 if (ws) ws.close();
             }
         });
 
+        // Iniciar con cámara por defecto
         initCamera();
     </script>
 </body>
