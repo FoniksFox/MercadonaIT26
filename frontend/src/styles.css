@@ -54,10 +54,9 @@ html {
   --green: #00894e;
   --accent: var(--green);
   --on-accent: #ffffff;
-  --sidebar: var(--green);
-  --sidebar-panel: var(--green);
-  /* The active entry is marked with a white veil over that same green. */
-  --sidebar-indicator: rgb(255 255 255 / 0.22);
+  --sidebar: #0a5c40;
+  --sidebar-panel: #0e7c56;
+  --sidebar-indicator: #12936a;
   /* Charts. */
   --series: var(--green);
   --grid: #e3e9e3;
@@ -83,6 +82,9 @@ html {
   --plan-floor: #121a16;
   --plan-wall: #3c4d45;
   --plan-fixture: #25332c;
+  --sidebar: #063a2b;
+  --sidebar-panel: #07513b;
+  --sidebar-indicator: #0b7654;
 }
 
 @layer base {

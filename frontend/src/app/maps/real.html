@@ -68,7 +68,7 @@
             class="map-view-tab"
             [class.map-view-tab-active]="view() === option.id"
             [attr.aria-selected]="view() === option.id"
-            (click)="view.set(option.id)"
+            (click)="selectView(option.id)"
           >
             <app-icon [name]="option.icon" class="size-4" />
             {{ option.label }}
@@ -108,13 +108,30 @@
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <section class="rounded-2xl border border-line bg-surface p-4 shadow-sm">
-        <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 class="font-semibold">{{ viewLabel() }}</h2>
-          <p class="text-sm text-ink-2" data-testid="frame-size">
-            Fotograma de {{ frameSize().width }} × {{ frameSize().height }} px{{
-              frameSize().known ? '' : ' (supuesto, hasta que el backend lo diga)'
-            }}
-          </p>
+          <div class="flex items-center gap-3">
+            <p class="text-sm text-ink-2" data-testid="frame-size">
+              Fotograma de {{ frameSize().width }} × {{ frameSize().height }} px{{
+                frameSize().known ? '' : ' (supuesto, hasta que el backend lo diga)'
+              }}
+            </p>
+            @if (view() === 'heatmap') {
+              <button
+                type="button"
+                class="rounded-lg border border-line px-3 py-2 text-sm font-semibold transition-colors"
+                [class]="
+                  accumulated()
+                    ? 'bg-accent text-on-accent'
+                    : 'bg-surface text-ink-2 hover:bg-sunken'
+                "
+                [attr.aria-pressed]="accumulated()"
+                (click)="toggleAccumulated()"
+              >
+                Acumulado
+              </button>
+            }
+          </div>
         </div>
 
         <div
@@ -148,18 +165,18 @@
               <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
               <span>Alta</span>
             }
-            @case ('accumulated') {
-              <span class="font-semibold text-ink">Presencia acumulada</span>
-              <span>Baja</span>
-              <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
-              <span>Alta</span>
-            }
             @case ('flow') {
               <app-icon name="arrow" class="size-5 text-accent" />
               <span>
-                <span class="font-semibold text-ink">Flujo predominante.</span>
-                Cuanto más larga la flecha, más paso en ese sentido
+                <span class="font-semibold text-ink">Flujo</span>
+                A más larga la flecha, más personas
               </span>
+            }
+            @case ('occupancy') {
+              <span class="font-semibold text-ink">Ocupación</span>
+              <span>Baja</span>
+              <span class="h-2 w-32 rounded-full" [style.background]="heatGradient"></span>
+              <span>Alta</span>
             }
           }
           <span class="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -175,7 +192,7 @@
             }
             <span class="flex items-center gap-2">
               <span class="size-2.5 rounded-full bg-[#13201a] ring-2 ring-white"></span>
-              Persona, sin identificar
+              Persona
             </span>
             <span class="flex items-center gap-2">
               <span class="size-3.5 rounded-full border-2 border-accent bg-white"></span>

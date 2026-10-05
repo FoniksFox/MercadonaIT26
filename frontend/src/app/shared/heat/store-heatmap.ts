@@ -185,11 +185,11 @@ export class StoreHeatmap {
     switch (this.view()) {
       case 'heatmap':
         // A past period has no "recent": it shows what the whole period accumulated.
-        if (this.live) {
+        if (live) {
           if (this.accumulated()) {
-            this.total.paint(context, width, height, this.hottestTotal);
+            this.simulation.total.paint(context, width, height, this.simulation.hottestTotal);
           }
-          this.recent.paint(context, width, height, this.hottestRecent);
+          this.simulation.recent.paint(context, width, height, this.simulation.hottestRecent);
         } else {
           this.pastHeat.paint(context, width, height, this.pastHottest);
         }

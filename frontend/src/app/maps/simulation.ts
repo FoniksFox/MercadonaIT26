@@ -23,8 +23,6 @@ const DAYS = { today: 1, week: 7, month: 30 } as const;
 const OPENS_AT = 9;
 const CLOSES_AT = 21.5;
 /** People standing in a zone from which it counts as crowded. */
-const CROWDED_FROM = 6;
-const QUEUE_FROM = 5;
 
 const SHORT_DATE = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
 
@@ -140,19 +138,6 @@ export class Simulation {
       null,
     );
     return top;
-  });
-
-  protected readonly alerts = computed(() => {
-    if (!this.live()) {
-      return [];
-    }
-    return this.zoneRows()
-      .filter((row) => row.people >= (row.zone.id === 'checkout' ? QUEUE_FROM : CROWDED_FROM))
-      .map((row) =>
-        row.zone.id === 'checkout'
-          ? { zone: row.zone, text: `${row.people} personas en cola`, action: 'Abrir otra caja' }
-          : { zone: row.zone, text: `${row.people} personas a la vez`, action: 'Revisar la zona' },
-      );
   });
 
   /** Placeholder totals of a past period, stable per store and period. */

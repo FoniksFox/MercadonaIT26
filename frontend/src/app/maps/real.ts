@@ -19,7 +19,7 @@ import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
 
-type RealView = 'heatmap' | 'accumulated' | 'flow';
+type RealView = 'heatmap' | 'flow' | 'occupancy';
 
 interface FrameSize {
   width: number;
@@ -65,6 +65,7 @@ export class RealMap {
   protected readonly backend = inject(BackendConnection);
 
   protected readonly view = signal<RealView>('heatmap');
+  protected readonly accumulated = signal(false);
   protected readonly showCamera = signal(true);
   protected readonly frameSize = signal<FrameSize>({ width: 640, height: 360, known: false });
   protected readonly clearing = signal(false);
@@ -72,13 +73,24 @@ export class RealMap {
   protected readonly heatGradient = HEAT_GRADIENT;
   protected readonly views: readonly { id: RealView; label: string; icon: IconName }[] = [
     { id: 'heatmap', label: 'Mapa de calor', icon: 'flame' },
-    { id: 'accumulated', label: 'Calor acumulado', icon: 'layers' },
     { id: 'flow', label: 'Mapa de flujo', icon: 'wind' },
+    { id: 'occupancy', label: 'Ocupación', icon: 'layout' },
   ];
 
   protected readonly viewLabel = computed(
     () => this.views.find((option) => option.id === this.view())!.label,
   );
+
+  protected toggleAccumulated(): void {
+    this.accumulated.update((enabled) => !enabled);
+  }
+
+  protected selectView(view: RealView): void {
+    if (view !== 'heatmap') {
+      this.accumulated.set(false);
+    }
+    this.view.set(view);
+  }
   protected readonly aspect = computed(
     () => `${this.frameSize().width} / ${this.frameSize().height}`,
   );
@@ -281,10 +293,10 @@ export class RealMap {
     }
     switch (this.view()) {
       case 'heatmap':
+        if (this.accumulated()) {
+          this.total.paint(context, width, height, this.hottestTotal);
+        }
         this.recent.paint(context, width, height, this.hottestRecent);
-        break;
-      case 'accumulated':
-        this.total.paint(context, width, height, this.hottestTotal);
         break;
       case 'flow':
         paintFlow(
@@ -296,6 +308,9 @@ export class RealMap {
           ratio,
           accent,
         );
+        break;
+      case 'occupancy':
+        this.recent.paint(context, width, height, this.hottestRecent);
         break;
     }
 
