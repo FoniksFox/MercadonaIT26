@@ -2,7 +2,7 @@ import { seededRandom } from '../core/random';
 import { Supermarket } from '../core/supermarkets';
 import { ZONES, Zone, ZoneId } from '../core/zones';
 import { DAY_SHAPE, HOUR_SHAPE, OPENING_HOURS, WEEK_DAYS } from '../statistics/statistics-data';
-import { STAFF_PLAN, assess, staffUnits } from './staffing';
+import { STAFF_PLAN, assess, staffUnits } from '../core/staffing';
 
 // Where and when staff fell short over a past period. Placeholder figures,
 // stable per store and period, built on the same busy hours and days as the

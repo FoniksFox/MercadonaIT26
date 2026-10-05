@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { formatNumber } from '../core/format';
 import { seededRandom } from '../core/random';
+import { StoreSimulation } from '../core/store-simulation';
 import { Supermarkets } from '../core/supermarkets';
 import { ZONES } from '../core/zones';
 import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
@@ -48,12 +49,16 @@ export class Simulation {
   protected readonly view = signal<MapView>('heatmap');
   protected readonly period = signal<MapPeriod>('live');
   protected readonly menuOpen = signal(false);
-  /** Bumped by "Reiniciar simulación": the live map starts again from an empty store. */
-  protected readonly restarts = signal(0);
+  /** The live store is the app-wide simulation: this page shows it, it does not own it. */
+  private readonly simulation = inject(StoreSimulation);
   /** How many simulated seconds pass per real second. */
-  protected readonly speed = signal(1);
+  protected readonly speed = this.simulation.speed;
   protected readonly speeds = [1, 2] as const;
-  protected readonly snapshot = signal<CrowdSnapshot | null>(null);
+  /** Totals of the past period on screen, as the map reports them. */
+  protected readonly pastSnapshot = signal<CrowdSnapshot | null>(null);
+  protected readonly snapshot = computed(() =>
+    this.period() === 'live' ? this.simulation.snapshot() : this.pastSnapshot(),
+  );
   protected readonly isViewAnimating = signal(false);
   private viewAnimationTimer?: ReturnType<typeof setTimeout>;
 
@@ -164,6 +169,11 @@ export class Simulation {
       stayMinutes: Math.round(19 + random() * 8),
     };
   });
+
+  /** Empties the store and starts the simulation again: the only thing that does. */
+  protected restart(): void {
+    this.simulation.restart();
+  }
 
   protected choose(period: MapPeriod): void {
     this.period.set(period);
