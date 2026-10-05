@@ -21,6 +21,7 @@ describe('parseFrame', () => {
 
     expect(frame).toEqual({
       timestamp: 1696512345000,
+      size: null,
       stats: {
         count: 2,
         fps: 28,
@@ -33,6 +34,23 @@ describe('parseFrame', () => {
         { id: 2, x: 400, y: 210 },
       ],
     });
+  });
+
+  it('should read the size of the frame wherever the backend puts it', () => {
+    const body = { stats: { count: 0, fps: 1, latency: 1, device: 'cpu' }, points: [] };
+
+    expect(parseFrame(JSON.stringify({ ...body, width: 640, height: 360 }))?.size).toEqual({
+      width: 640,
+      height: 360,
+    });
+    expect(
+      parseFrame(JSON.stringify({ ...body, frame_size: { width: 480, height: 270 } }))?.size,
+    ).toEqual({ width: 480, height: 270 });
+    expect(
+      parseFrame(JSON.stringify({ ...body, stats: { ...body.stats, width: 320, height: 180 } }))
+        ?.size,
+    ).toEqual({ width: 320, height: 180 });
+    expect(parseFrame(JSON.stringify({ ...body, width: 0, height: 0 }))?.size).toBeNull();
   });
 
   it('should accept a message without hotspots and drop points without a position', () => {

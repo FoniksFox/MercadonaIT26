@@ -31,6 +31,8 @@ export interface BackendStats {
 /** A message of `/ws/v1/heatmap/data`: what the model saw in one frame. */
 export interface BackendFrame {
   timestamp: number;
+  /** Size in pixels of the frame the points refer to; `null` if the backend does not say. */
+  size: { width: number; height: number } | null;
   stats: BackendStats;
   points: BackendPoint[];
 }
@@ -84,8 +86,14 @@ export function parseFrame(text: string): BackendFrame | null {
     return null;
   }
   const hotspots = Array.isArray(stats['hotspots']) ? stats['hotspots'] : [];
+  // The size comes at the top level, and also inside `frame_size` and `stats`.
+  const sized = [message, message['frame_size'], stats].find(
+    (part): part is Json =>
+      isRecord(part) && number(part['width']) > 0 && number(part['height']) > 0,
+  );
   return {
     timestamp: number(message['timestamp']),
+    size: sized ? { width: number(sized['width']), height: number(sized['height']) } : null,
     stats: {
       count: number(stats['count']),
       fps: number(stats['fps']),

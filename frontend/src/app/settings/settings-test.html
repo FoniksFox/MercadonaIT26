@@ -1,10 +1,264 @@
-<section class="rounded-2xl border border-line bg-surface p-6 shadow-sm">
-  <h2 class="text-lg font-semibold">Pruebas</h2>
-  <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-2">
-    Esta sección queda preparada para lanzar y consultar los análisis gestionados por el backend.
-    La carga y el procesamiento de vídeos se realizarán mediante la API.
-  </p>
-  <div class="mt-6 rounded-xl border border-dashed border-line bg-sunken p-5 text-sm text-ink-2">
-    No hay ejecuciones disponibles todavía.
+<div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+  <section class="rounded-2xl border border-line bg-surface p-4 shadow-sm">
+    @if (videoUrl(); as url) {
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="min-w-0 truncate font-semibold">{{ fileName() }}</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          @if (usingModel()) {
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-sunken"
+              (click)="togglePlay()"
+            >
+              <app-icon [name]="paused() ? 'play' : 'pause'" class="size-4" />
+              {{ paused() ? 'Reanudar' : 'Pausar' }}
+            </button>
+          }
+          <label
+            class="flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:bg-sunken focus-within:outline-2 focus-within:outline-accent"
+          >
+            <app-icon name="upload" class="size-4" />
+            Cambiar vídeo
+            <input type="file" accept="video/*" class="sr-only" (change)="pick($event)" />
+          </label>
+        </div>
+      </div>
+
+      @if (usingModel()) {
+        <div
+          class="relative overflow-hidden rounded-xl bg-black"
+          [style.aspect-ratio]="aspect()"
+          data-testid="model-view"
+        >
+          <!-- Plays unseen: it is only the source of the frames sent to the model. -->
+          <video
+            #source
+            class="pointer-events-none absolute size-px opacity-0"
+            [src]="url"
+            [muted]="true"
+            loop
+            playsinline
+            (loadedmetadata)="fit($event)"
+          ></video>
+          @if (cameraImage(); as camera) {
+            <img
+              [src]="camera"
+              alt="Vídeo con las personas que detecta el modelo"
+              class="absolute inset-0 size-full object-contain transition-opacity"
+              [class.opacity-0]="!showCamera()"
+            />
+          }
+          @if (heatImage(); as heat) {
+            <!-- The model paints its heat on black: "screen" leaves only the colors over the video. -->
+            <img
+              [src]="heat"
+              alt="Mapa de calor del modelo"
+              class="absolute inset-0 size-full object-contain mix-blend-screen"
+            />
+          }
+          @if (!cameraImage() && !heatImage()) {
+            <p
+              class="absolute inset-0 flex items-center justify-center px-6 text-center text-white/80"
+            >
+              Enviando el vídeo al modelo…
+            </p>
+          }
+        </div>
+      } @else {
+        <app-video-heatmap
+          [src]="url"
+          [showCamera]="showCamera()"
+          [radius]="radius()"
+          [confidence]="confidence()"
+          [decay]="decay()"
+        />
+      }
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-2">
+        @if (!usingModel()) {
+          <span>Menos presencia</span>
+          <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
+          <span>Más presencia</span>
+        }
+        <span class="ml-auto flex items-center gap-1.5" data-testid="source-note">
+          <app-icon name="info" class="size-4" />
+          @if (usingModel()) {
+            Procesado por el modelo: los deslizadores cambian su configuración
+          } @else {
+            Vista previa local: el calor sale del movimiento, no del modelo
+          }
+        </span>
+      </div>
+    } @else {
+      <label
+        class="flex aspect-video cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed px-6 text-center transition-colors focus-within:outline-2 focus-within:outline-accent"
+        [class]="dragging() ? 'border-accent bg-sunken' : 'border-line hover:border-ink-3'"
+        (dragover)="hover($event, true)"
+        (dragleave)="hover($event, false)"
+        (drop)="drop($event)"
+      >
+        <app-icon name="upload" class="size-10 text-accent" />
+        <span class="text-lg font-semibold">Sube un vídeo de la tienda</span>
+        <span class="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent">
+          Elegir archivo
+        </span>
+        <span class="text-sm text-ink-2">o arrástralo aquí</span>
+        <input type="file" accept="video/*" class="sr-only" (change)="pick($event)" />
+      </label>
+    }
+
+    @if (error(); as message) {
+      <p role="alert" class="mt-3 flex items-center gap-2 text-sm">
+        <app-icon name="alert" class="size-5 text-brand-red" />
+        {{ message }}
+      </p>
+    }
+  </section>
+
+  <div class="space-y-6">
+    <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+      <h2 class="font-semibold">Modelo</h2>
+      <p class="mt-3 flex items-start gap-3 text-sm" data-testid="model-state">
+        <span class="mt-1.5 size-2.5 shrink-0 rounded-full" [class]="modelState().dot"></span>
+        {{ modelState().text }}
+      </p>
+
+      <form class="mt-4 space-y-3" (submit)="connect($event, address.value)">
+        <label class="block">
+          <span class="text-sm font-medium">Dirección del backend</span>
+          <input
+            #address
+            type="text"
+            name="backend"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="192.168.1.50:8000"
+            class="mt-1.5 w-full rounded-xl border border-line bg-canvas px-3 py-2 font-mono text-sm"
+            [value]="backend.address()"
+          />
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            class="flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition hover:brightness-110"
+          >
+            <app-icon name="plug" class="size-4" />
+            {{ backend.connected() ? 'Reconectar' : 'Conectar' }}
+          </button>
+          @if (backend.connected()) {
+            <button
+              type="button"
+              class="rounded-xl border border-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-sunken"
+              (click)="backend.disconnect()"
+            >
+              Desconectar
+            </button>
+          }
+        </div>
+      </form>
+
+      @if (backend.addressError(); as problem) {
+        <p role="alert" class="mt-3 text-sm">{{ problem }}</p>
+      }
+
+      @if (usingModel() && stats(); as model) {
+        <dl class="mt-4 space-y-2 border-t border-line pt-4 text-sm" data-testid="model-stats">
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-ink-2">Personas en el vídeo</dt>
+            <dd class="font-semibold tabular-nums">{{ model.count }}</dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-ink-2">Velocidad del modelo</dt>
+            <dd class="font-semibold tabular-nums">{{ model.fps }} fps</dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-ink-2">Hardware</dt>
+            <dd class="font-semibold">{{ model.device.toUpperCase() }}</dd>
+          </div>
+        </dl>
+      }
+    </section>
+
+    <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+      <h2 class="font-semibold">Opciones</h2>
+
+      <label class="mt-4 flex cursor-pointer items-center gap-3 text-sm font-medium">
+        <input
+          type="checkbox"
+          class="size-4"
+          [checked]="showCamera()"
+          (change)="showCamera.set(checkedFrom($event))"
+        />
+        Mostrar cámara
+      </label>
+
+      <div class="mt-6 space-y-6 border-t border-line pt-5">
+        <label class="block">
+          <span class="flex items-baseline justify-between text-sm">
+            <span class="font-medium">Radio</span>
+            <span class="tabular-nums text-ink-2">{{ radius() }} px</span>
+          </span>
+          <input
+            type="range"
+            class="mt-2 w-full"
+            min="11"
+            max="101"
+            step="2"
+            [value]="radius()"
+            (input)="tune('radius', $event)"
+          />
+          <span class="mt-1 block text-xs text-ink-2">Tamaño de la mancha de cada persona</span>
+        </label>
+
+        <label class="block">
+          <span class="flex items-baseline justify-between text-sm">
+            <span class="font-medium">Confianza</span>
+            <span class="tabular-nums text-ink-2">{{ confidence().toFixed(2) }}</span>
+          </span>
+          <input
+            type="range"
+            class="mt-2 w-full"
+            min="0.1"
+            max="0.9"
+            step="0.05"
+            [value]="confidence()"
+            (input)="tune('confidence', $event)"
+          />
+          <span class="mt-1 block text-xs text-ink-2">
+            Certeza mínima para contar una detección
+          </span>
+        </label>
+
+        <label class="block">
+          <span class="flex items-baseline justify-between text-sm">
+            <span class="font-medium">Decaimiento</span>
+            <span class="tabular-nums text-ink-2">{{ decay().toFixed(2) }}</span>
+          </span>
+          <input
+            type="range"
+            class="mt-2 w-full"
+            min="0"
+            max="0.99"
+            step="0.01"
+            [value]="decay()"
+            (input)="tune('decay', $event)"
+          />
+          <span class="mt-1 block text-xs text-ink-2">
+            Calor que se conserva de un fotograma al siguiente
+          </span>
+        </label>
+      </div>
+
+      @if (backend.connected()) {
+        <button
+          type="button"
+          class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-sunken"
+          (click)="backend.clearMaps()"
+        >
+          <app-icon name="eraser" class="size-4" />
+          Limpiar datos del modelo
+        </button>
+      }
+    </section>
   </div>
-</section>
+</div>
