@@ -1,14 +1,13 @@
-<header class="px-6 pt-6 md:px-8">
-  <h1 class="text-2xl font-bold tracking-tight">Cambiar de Mercadona</h1>
-</header>
+<div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
+<app-page-header title="Cambiar de Mercadona" />
 
-<ul class="grid gap-4 px-6 py-6 md:px-8 lg:grid-cols-2 2xl:grid-cols-3">
+<ul class="mt-8 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
   @for (store of supermarkets.all; track store.id) {
     @let current = store.id === supermarkets.current().id;
     <li>
       <button
         type="button"
-        class="flex w-full items-center gap-4 rounded-2xl border bg-surface p-5 text-left transition-colors"
+        class="flex w-full items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition-colors"
         [class]="current ? 'border-accent' : 'border-line hover:border-ink-3'"
         [disabled]="current"
         (click)="ask(store)"
@@ -30,12 +29,12 @@
     </li>
   }
 </ul>
+</div>
 
 <dialog
   #dialog
   class="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-line bg-surface p-6 text-ink shadow-xl backdrop:bg-black/50"
   aria-labelledby="switch-store-title"
-  (close)="pending.set(null)"
 >
   @if (pending(); as store) {
     <div class="flex items-start gap-4">

@@ -10,7 +10,7 @@ import { Icon } from '../icon';
   imports: [Icon],
   host: { class: 'block' },
   template: `
-    <figure class="h-full rounded-2xl border border-line bg-surface p-5">
+    <figure class="h-full rounded-2xl border border-line bg-surface shadow-sm p-5">
       <div class="mb-4 flex items-start justify-between gap-4">
         <figcaption>
           <h2 class="font-semibold">{{ title() }}</h2>

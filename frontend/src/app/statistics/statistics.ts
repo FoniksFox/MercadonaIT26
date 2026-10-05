@@ -8,6 +8,7 @@ import { HeatGrid } from '../shared/charts/heat-grid';
 import { LineChart, LineSeries } from '../shared/charts/line-chart';
 import { StatTile } from '../shared/stat-tile';
 import { OPENING_HOURS, StatsRange, buildStats } from './statistics-data';
+import { PageHeader } from '../shared/page-header';
 
 const WEEKDAY = new Intl.DateTimeFormat('es-ES', { weekday: 'long' });
 
@@ -26,7 +27,7 @@ function against(range: StatsRange): string {
 /** Figures and charts of the selected store for one period. */
 @Component({
   selector: 'app-statistics',
-  imports: [BarChart, ChartCard, DataTable, HeatGrid, LineChart, StatTile],
+  imports: [PageHeader, BarChart, ChartCard, DataTable, HeatGrid, LineChart, StatTile],
   templateUrl: './statistics.html',
 })
 export class Statistics {

@@ -1,66 +1,96 @@
-<div class="flex min-h-screen flex-col bg-canvas text-ink md:flex-row">
+<div class="flex min-h-screen flex-col bg-canvas font-sans text-ink md:flex-row">
   <aside
-    class="flex shrink-0 flex-col bg-sidebar text-white md:sticky md:top-0 md:h-screen md:w-64"
+    class="flex shrink-0 flex-col gap-4 bg-sidebar px-4 py-4 text-white shadow-xl md:sticky md:top-0 md:h-screen md:w-72 md:gap-6 md:py-6"
   >
-    <a routerLink="/maps" class="block px-6 pt-5 md:pt-7">
-      <span class="flex items-center gap-3">
-        <img src="favicon.svg" alt="" width="36" height="36" class="size-9 rounded-lg" />
-        <span class="text-2xl font-bold tracking-tight">MercaTrack</span>
-      </span>
-      <span class="mt-2 hidden text-sm text-white/75 md:block">
-        La tienda que entiende su propio movimiento
-      </span>
-    </a>
-
-    <nav
-      aria-label="Navegación principal"
-      class="mt-4 flex gap-1 overflow-x-auto px-3 pb-3 md:mt-8 md:flex-col md:pb-0"
-    >
-      @for (item of navigation; track item.path) {
-        <a
-          [routerLink]="item.path"
-          routerLinkActive="bg-white/15"
-          ariaCurrentWhenActive="page"
-          class="flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-white/90 transition-colors hover:bg-white/10"
-        >
-          <app-icon [name]="item.icon" class="size-5" />
-          {{ item.label }}
-        </a>
-      }
-    </nav>
-
-    <div class="flex gap-2 px-3 pb-3 md:mt-auto md:flex-col md:pb-5">
-      <a
-        routerLink="/stores"
-        routerLinkActive="bg-white/15"
-        ariaCurrentWhenActive="page"
-        class="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-white/25 px-3 py-2.5 transition-colors hover:bg-white/10"
-      >
-        <app-icon name="store" class="size-5" />
-        <span class="min-w-0 flex-1">
-          <span class="block truncate font-semibold">{{ supermarket().name }}</span>
-          <span class="block text-xs text-white/75">Cambiar de Mercadona</span>
+    <div class="flex items-center gap-2 rounded-2xl bg-sidebar-panel p-4 shadow-inner md:p-5">
+      <a routerLink="/maps" class="flex min-w-0 flex-1 items-center gap-4">
+        <img src="favicon.svg" alt="" width="48" height="48" class="size-12 shrink-0 rounded-xl" />
+        <span class="min-w-0">
+          <span class="block text-2xl font-extrabold tracking-tight">MercaTrack</span>
+          <span class="mt-1 hidden text-sm leading-5 text-white/80 md:block">
+            La tienda que entiende su propio movimiento
+          </span>
         </span>
-        <app-icon name="swap" class="size-4 text-white/75" />
       </a>
-
       <button
         type="button"
-        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/90 transition-colors hover:bg-white/10"
+        class="rounded-xl p-2.5 transition-colors hover:bg-white/15 md:hidden"
+        [attr.aria-label]="theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro'"
         (click)="theme.toggle()"
       >
-        <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" class="size-5" />
-        <span class="hidden md:inline">
-          {{ theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}
-        </span>
-        <span class="sr-only md:hidden">
-          {{ theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}
-        </span>
+        <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" class="size-6" />
       </button>
     </div>
+
+    <nav
+      #nav
+      class="relative flex min-h-0 gap-2 overflow-x-auto rounded-2xl bg-sidebar-panel/90 p-3 shadow-inner md:flex-1 md:flex-col md:overflow-x-visible md:overflow-y-auto"
+      [class.is-indicator-animating]="isAnimating()"
+      aria-label="Navegación principal"
+    >
+      @if (indicator(); as box) {
+        <div
+          class="tab-active-indicator"
+          aria-hidden="true"
+          [style.top.px]="box.top"
+          [style.left.px]="box.left"
+          [style.width.px]="box.width"
+          [style.height.px]="box.height"
+        ></div>
+      }
+
+      <div class="flex gap-2 md:flex-col md:gap-3">
+        @for (item of mainNavigation; track item.path) {
+          <a
+            [routerLink]="item.path"
+            [attr.aria-current]="activePath() === item.path ? 'page' : null"
+            class="relative z-10 flex min-h-14 shrink-0 items-center gap-4 rounded-xl px-4 text-lg font-semibold text-white transition-colors hover:bg-white/15"
+          >
+            <app-icon [name]="item.icon" class="size-7" />
+            {{ item.label }}
+          </a>
+        }
+      </div>
+
+      <div class="flex gap-2 md:mt-auto md:flex-col md:gap-3 md:border-t md:border-white/25 md:pt-3">
+        <a
+          [routerLink]="settings.path"
+          [attr.aria-current]="activePath() === settings.path ? 'page' : null"
+          class="relative z-10 flex min-h-14 shrink-0 items-center gap-4 rounded-xl px-4 text-lg font-semibold text-white transition-colors hover:bg-white/15"
+        >
+          <app-icon [name]="settings.icon" class="size-7" />
+          {{ settings.label }}
+        </a>
+        <a
+          [routerLink]="storesPath"
+          [attr.aria-current]="activePath() === storesPath ? 'page' : null"
+          class="relative z-10 flex min-h-14 shrink-0 items-center gap-4 rounded-xl px-4 py-2 text-white transition-colors hover:bg-white/15"
+        >
+          <app-icon name="store" class="size-7" />
+          <span class="min-w-0">
+            <span class="block truncate text-lg leading-6 font-semibold">{{ supermarket().name }}</span>
+            <span class="block text-xs text-white/80">Cambiar de Mercadona</span>
+          </span>
+        </a>
+      </div>
+    </nav>
+
+    <button
+      type="button"
+      class="hidden items-center gap-4 rounded-xl px-4 py-2.5 font-medium text-white/90 transition-colors hover:bg-white/15 md:flex"
+      (click)="theme.toggle()"
+    >
+      <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" class="size-6" />
+      {{ theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}
+    </button>
   </aside>
 
-  <main class="min-w-0 flex-1">
-    <router-outlet />
+  <main class="min-w-0 flex-1 overflow-hidden">
+    <div
+      [class.content-slide-down]="isAnimating() && navigationDirection() === 'down'"
+      [class.content-slide-up]="isAnimating() && navigationDirection() === 'up'"
+    >
+      <router-outlet />
+    </div>
   </main>
 </div>

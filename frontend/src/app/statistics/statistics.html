@@ -1,15 +1,14 @@
-<header class="flex flex-wrap items-center justify-between gap-4 px-6 pt-6 md:px-8">
-  <h1 class="text-2xl font-bold tracking-tight">Estadísticas</h1>
-
+<div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
+<app-page-header title="Estadísticas">
   <div
-    class="flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-sm font-medium"
+    class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-sm"
     role="group"
     aria-label="Periodo"
   >
     @for (option of ranges; track option.id) {
       <button
         type="button"
-        class="rounded-md px-3 py-1.5 transition-colors"
+        class="rounded-lg px-3 py-2 transition-colors"
         [class]="range() === option.id ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
         [attr.aria-pressed]="range() === option.id"
         (click)="range.set(option.id)"
@@ -18,9 +17,9 @@
       </button>
     }
   </div>
-</header>
+</app-page-header>
 
-<div class="space-y-6 px-6 py-6 md:px-8">
+<div class="mt-8 space-y-6">
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <app-stat-tile
       label="Visitantes"
@@ -70,4 +69,5 @@
       <app-data-table chartTable [columns]="gridColumns" [rows]="gridTable()" />
     </app-chart-card>
   }
+</div>
 </div>

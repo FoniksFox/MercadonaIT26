@@ -10,11 +10,12 @@ import {
 import { Router } from '@angular/router';
 import { Supermarket, Supermarkets } from '../core/supermarkets';
 import { Icon } from '../shared/icon';
+import { PageHeader } from '../shared/page-header';
 
 /** Choose which Mercadona to look at. Switching asks for confirmation first. */
 @Component({
   selector: 'app-store-picker',
-  imports: [Icon],
+  imports: [PageHeader, Icon],
   templateUrl: './store-picker.html',
 })
 export class StorePicker {
@@ -22,7 +23,11 @@ export class StorePicker {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
 
-  /** Store waiting for confirmation in the warning dialog. */
+  /**
+   * Store the warning dialog asks about. It is kept after the dialog closes:
+   * clearing it on the (asynchronous) close event could empty a dialog that
+   * was reopened right away.
+   */
   protected readonly pending = signal<Supermarket | null>(null);
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');

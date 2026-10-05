@@ -1,0 +1,23 @@
+.map-view-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.map-view-tab:hover {
+  background: var(--sunken);
+  color: var(--accent);
+}
+
+.map-view-tab-active,
+.map-view-tab-active:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 4px 10px rgb(6 78 59 / 0.16);
+}

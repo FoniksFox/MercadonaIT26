@@ -1,18 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Icon } from '../shared/icon';
+import { PageHeader } from '../shared/page-header';
 
 /** Settings shell: "General" and the "Pruebas" sub-screen to try the model on a video. */
 @Component({
   selector: 'app-settings',
-  imports: [Icon, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [Icon, PageHeader, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
-    <header class="px-6 pt-6 md:px-8">
-      <h1 class="text-2xl font-bold tracking-tight">Configuración</h1>
+    <div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
+      <app-page-header title="Configuración" />
 
       <nav
         aria-label="Secciones de configuración"
-        class="mt-4 flex gap-6 border-b border-line text-sm font-medium"
+        class="mt-6 flex gap-6 border-b border-line text-sm font-semibold"
       >
         <a
           routerLink="/settings"
@@ -38,9 +39,9 @@ import { Icon } from '../shared/icon';
           Pruebas
         </a>
       </nav>
-    </header>
 
-    <router-outlet />
+      <router-outlet />
+    </div>
   `,
 })
 export class Settings {

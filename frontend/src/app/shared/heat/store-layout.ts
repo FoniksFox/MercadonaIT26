@@ -60,6 +60,23 @@ export const TILLS: readonly Rect[] = [330, 410, 490, 570, 650, 730].map((x) => 
   h: 58,
 }));
 
+/**
+ * Floor each zone covers, for the occupancy view. `label` is where its figure
+ * goes when the middle of the area is taken by the zone name.
+ */
+export const ZONE_AREAS: Record<ZoneId, Rect & { label?: Point }> = {
+  fruit: { x: 36, y: 146, w: 208, h: 240 },
+  bakery: { x: 40, y: 34, w: 210, h: 78, label: { x: 145, y: 100 } },
+  butcher: { x: 280, y: 34, w: 190, h: 78, label: { x: 375, y: 100 } },
+  deli: { x: 490, y: 34, w: 190, h: 78, label: { x: 585, y: 100 } },
+  fish: { x: 700, y: 34, w: 190, h: 78, label: { x: 795, y: 100 } },
+  pantry: { x: 252, y: 146, w: 276, h: 278 },
+  drinks: { x: 532, y: 146, w: 96, h: 278 },
+  household: { x: 632, y: 146, w: 226, h: 278 },
+  dairy: { x: 862, y: 126, w: 104, h: 308, label: { x: 914, y: 152 } },
+  checkout: { x: 300, y: 470, w: 490, h: 82 },
+};
+
 export interface PlanLabel {
   text: string;
   x: number;

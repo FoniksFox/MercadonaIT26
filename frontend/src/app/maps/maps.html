@@ -1,164 +1,222 @@
-<header class="flex flex-wrap items-center justify-between gap-4 px-6 pt-6 md:px-8">
-  <h1 class="text-2xl font-bold tracking-tight">Mapas</h1>
-
-  <div
-    class="flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-sm font-medium"
-    role="group"
-    aria-label="Periodo del mapa"
-  >
-    <button
-      type="button"
-      class="flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors"
-      [class]="live() ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
-      [attr.aria-pressed]="live()"
-      (click)="choose('live')"
+<div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
+  <app-page-header title="Mapas">
+    <div
+      class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-sm"
+      role="group"
+      aria-label="Periodo del mapa"
     >
-      <span
-        class="size-2 rounded-full"
-        [class]="live() ? 'animate-pulse bg-current' : 'bg-brand-red'"
-      ></span>
-      En vivo
-    </button>
-
-    <div class="relative" #menu>
       <button
         type="button"
-        class="flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors"
-        [class]="live() ? 'text-ink-2 hover:bg-sunken' : 'bg-accent text-on-accent'"
-        aria-haspopup="menu"
-        [attr.aria-expanded]="menuOpen()"
-        (click)="openPast()"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+        [class]="live() ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
+        [attr.aria-pressed]="live()"
+        (click)="choose('live')"
       >
-        <app-icon name="history" class="size-4" />
-        {{ pastLabel() }}
-        <app-icon name="chevron-down" class="size-4" />
+        <span
+          class="size-2 rounded-full"
+          [class]="live() ? 'animate-pulse bg-current' : 'bg-brand-red'"
+        ></span>
+        En vivo
       </button>
 
-      @if (menuOpen()) {
-        <div
-          role="menu"
-          aria-label="Histórico"
-          class="absolute right-0 top-full z-10 mt-2 w-48 rounded-lg border border-line bg-surface p-1 shadow-lg"
+      <div class="relative" #menu>
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+          [class]="live() ? 'text-ink-2 hover:bg-sunken' : 'bg-accent text-on-accent'"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="openPast()"
         >
-          @for (option of pastPeriods; track option.id) {
-            <button
-              type="button"
-              role="menuitemradio"
-              class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-ink hover:bg-sunken"
-              [attr.aria-checked]="period() === option.id"
-              (click)="choose(option.id)"
-            >
-              <app-icon name="check" class="size-4" [class.invisible]="period() !== option.id" />
-              {{ option.label }}
-            </button>
-          }
-        </div>
-      }
-    </div>
-  </div>
-</header>
+          <app-icon name="history" class="size-4" />
+          {{ pastLabel() }}
+          <app-icon name="chevron-down" class="size-4" />
+        </button>
 
-<div class="grid gap-6 px-6 py-6 md:px-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
-  <section class="rounded-2xl border border-line bg-surface p-4">
-    <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 class="font-semibold">Mercadona {{ supermarket().name }}</h2>
-      <p class="text-sm text-ink-2">
-        @if (live()) {
-          Ahora
-        } @else {
-          {{ dateRange() }}
-        }
-      </p>
-    </div>
-
-    <app-store-heatmap
-      [seed]="supermarket().id"
-      [busyness]="supermarket().busyness"
-      [period]="period()"
-      (snapshot)="snapshot.set($event)"
-    />
-
-    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-2">
-      <span>Menos presencia</span>
-      <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
-      <span>Más presencia</span>
-      @if (live()) {
-        <span class="ml-auto flex items-center gap-2">
-          <span class="size-2.5 rounded-full bg-[#13201a] ring-2 ring-white"></span>
-          Persona, sin identificar
-        </span>
-      }
-    </div>
-  </section>
-
-  <div class="space-y-6">
-    <section class="rounded-2xl border border-line bg-surface p-5">
-      @if (live()) {
-        <h2 class="text-sm text-ink-2">Personas en la tienda</h2>
-        <p class="mt-1 text-5xl font-semibold">{{ snapshot()?.people ?? 0 }}</p>
-      } @else if (pastTotals(); as totals) {
-        <h2 class="text-sm text-ink-2">Visitas</h2>
-        <p class="mt-1 text-5xl font-semibold">{{ totals.visits }}</p>
-        <p class="mt-3 flex items-center gap-2 text-sm text-ink-2">
-          <app-icon name="timer" class="size-4" />
-          Permanencia media: {{ totals.stayMinutes }} min
-        </p>
-      }
-
-      @if (busiest(); as top) {
-        <div class="mt-4 flex items-center gap-3 border-t border-line pt-4">
-          <app-icon [name]="top.zone.icon" class="size-7 text-accent" />
-          <div>
-            <p class="text-sm text-ink-2">Zona más concurrida</p>
-            <p class="font-semibold">{{ top.zone.name }}</p>
+        @if (menuOpen()) {
+          <div
+            role="menu"
+            aria-label="Histórico"
+            class="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-line bg-surface p-1 font-medium shadow-lg"
+          >
+            @for (option of pastPeriods; track option.id) {
+              <button
+                type="button"
+                role="menuitemradio"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-ink hover:bg-sunken"
+                [attr.aria-checked]="period() === option.id"
+                (click)="choose(option.id)"
+              >
+                <app-icon name="check" class="size-4" [class.invisible]="period() !== option.id" />
+                {{ option.label }}
+              </button>
+            }
           </div>
-        </div>
-      }
-    </section>
-
-    <section class="rounded-2xl border border-line bg-surface p-5">
-      <h2 class="font-semibold">{{ live() ? 'Personas por zona' : 'Tiempo por zona' }}</h2>
-      <ul class="mt-4 space-y-3">
-        @for (row of zoneRows(); track row.zone.id) {
-          <li class="grid grid-cols-[1.25rem_minmax(0,1fr)_2.75rem] items-center gap-x-3 text-sm">
-            <app-icon [name]="row.zone.icon" class="size-5 text-ink-3" />
-            <div class="min-w-0">
-              <p class="truncate">{{ row.zone.name }}</p>
-              <div class="mt-1 h-1.5 rounded-full bg-sunken">
-                <div
-                  class="h-full rounded-full bg-series transition-[width] duration-500"
-                  [style.width.%]="row.fill"
-                ></div>
-              </div>
-            </div>
-            <p class="text-right font-semibold tabular-nums">
-              {{ row.value }}{{ live() ? '' : ' %' }}
-            </p>
-          </li>
         }
-      </ul>
+      </div>
+    </div>
+
+    <a
+      routerLink="/settings/test"
+      class="flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 font-semibold text-on-accent transition hover:brightness-110"
+    >
+      <app-icon name="upload" class="size-5" />
+      Subir vídeo
+    </a>
+  </app-page-header>
+
+  <div
+    class="mt-8 flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm"
+    role="tablist"
+    aria-label="Vistas del mapa"
+  >
+    @for (option of views; track option.id) {
+      <button
+        type="button"
+        role="tab"
+        class="map-view-tab"
+        [class.map-view-tab-active]="view() === option.id"
+        [attr.aria-selected]="view() === option.id"
+        (click)="view.set(option.id)"
+      >
+        <app-icon [name]="option.icon" class="size-4" />
+        {{ option.label }}
+      </button>
+    }
+  </div>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <section class="rounded-2xl border border-line bg-surface p-4 shadow-sm">
+      <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="font-semibold">{{ viewLabel() }}</h2>
+        <p class="text-sm text-ink-2">
+          @if (live()) {
+            Ahora
+          } @else {
+            {{ dateRange() }}
+          }
+        </p>
+      </div>
+
+      <app-store-heatmap
+        [seed]="supermarket().id"
+        [busyness]="supermarket().busyness"
+        [period]="period()"
+        [view]="view()"
+        (snapshot)="snapshot.set($event)"
+      />
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-2">
+        @switch (view()) {
+          @case ('heatmap') {
+            <span class="font-semibold text-ink">Concentración de personas</span>
+            <span>Baja</span>
+            <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
+            <span>Alta</span>
+          }
+          @case ('flow') {
+            <app-icon name="arrow" class="size-5 text-accent" />
+            <span>
+              <span class="font-semibold text-ink">Flujo predominante.</span>
+              Cuanto más larga la flecha, más paso en ese sentido
+            </span>
+          }
+          @case ('occupancy') {
+            <span class="font-semibold text-ink">Ocupación de cada zona</span>
+            <span>Baja</span>
+            <span
+              class="h-2 w-40 rounded-full"
+              style="
+                background: linear-gradient(
+                  to right,
+                  color-mix(in oklab, var(--accent) 10%, transparent),
+                  color-mix(in oklab, var(--accent) 70%, transparent)
+                );
+              "
+            ></span>
+            <span>Alta</span>
+          }
+        }
+        @if (live()) {
+          <span class="ml-auto flex items-center gap-2">
+            <span class="size-2.5 rounded-full bg-[#13201a] ring-2 ring-white"></span>
+            Persona, sin identificar
+          </span>
+        }
+      </div>
     </section>
 
-    @if (live()) {
-      <section class="rounded-2xl border border-line bg-surface p-5">
-        <h2 class="font-semibold">Avisos</h2>
-        <ul class="mt-3 space-y-3 text-sm">
-          @for (alert of alerts(); track alert.zone.id) {
-            <li class="flex items-start gap-3">
-              <app-icon name="alert" class="mt-0.5 size-5 text-brand-orange" />
-              <div>
-                <p class="font-semibold">{{ alert.zone.name }}: {{ alert.text }}</p>
-                <p class="text-ink-2">{{ alert.action }}</p>
+    <div class="space-y-6">
+      <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+        @if (live()) {
+          <h2 class="text-sm text-ink-2">Personas en la tienda</h2>
+          <p class="mt-1 text-5xl font-semibold" data-testid="headline">
+            {{ snapshot()?.people ?? 0 }}
+          </p>
+        } @else if (pastTotals(); as totals) {
+          <h2 class="text-sm text-ink-2">Visitas</h2>
+          <p class="mt-1 text-5xl font-semibold" data-testid="headline">{{ totals.visits }}</p>
+          <p class="mt-3 flex items-center gap-2 text-sm text-ink-2">
+            <app-icon name="timer" class="size-4" />
+            Permanencia media: {{ totals.stayMinutes }} min
+          </p>
+        }
+
+        @if (busiest(); as top) {
+          <div class="mt-4 flex items-center gap-3 border-t border-line pt-4">
+            <app-icon [name]="top.zone.icon" class="size-7 text-accent" />
+            <div>
+              <p class="text-sm text-ink-2">
+                {{ view() === 'occupancy' ? 'Zona más ocupada' : 'Zona más concurrida' }}
+              </p>
+              <p class="font-semibold">{{ top.zone.name }}</p>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+        <h2 class="font-semibold">{{ zoneList().title }}</h2>
+        <ul class="mt-4 space-y-3" data-testid="zones">
+          @for (row of zoneRows(); track row.zone.id) {
+            <li class="grid grid-cols-[1.25rem_minmax(0,1fr)_2.75rem] items-center gap-x-3 text-sm">
+              <app-icon [name]="row.zone.icon" class="size-5 text-ink-3" />
+              <div class="min-w-0">
+                <p class="truncate">{{ row.zone.name }}</p>
+                <div class="mt-1 h-1.5 rounded-full bg-sunken">
+                  <div
+                    class="h-full rounded-full bg-series transition-[width] duration-500"
+                    [style.width.%]="row.fill"
+                  ></div>
+                </div>
               </div>
-            </li>
-          } @empty {
-            <li class="flex items-center gap-3 text-ink-2">
-              <app-icon name="check" class="size-5 text-accent" />
-              Sin avisos
+              <p class="text-right font-semibold tabular-nums">{{ row.value }}{{ zoneList().unit }}</p>
             </li>
           }
         </ul>
       </section>
-    }
+
+      @if (live()) {
+        <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+          <h2 class="font-semibold">Avisos</h2>
+          <ul class="mt-3 space-y-3 text-sm">
+            @for (alert of alerts(); track alert.zone.id) {
+              <li class="flex items-start gap-3">
+                <app-icon name="alert" class="mt-0.5 size-5 text-brand-orange" />
+                <div>
+                  <p class="font-semibold">{{ alert.zone.name }}: {{ alert.text }}</p>
+                  <p class="text-ink-2">{{ alert.action }}</p>
+                </div>
+              </li>
+            } @empty {
+              <li class="flex items-center gap-3 text-ink-2">
+                <app-icon name="check" class="size-5 text-accent" />
+                Sin avisos
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
   </div>
 </div>

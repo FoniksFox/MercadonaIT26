@@ -1,5 +1,5 @@
-<div class="grid items-start gap-6 px-6 py-6 md:px-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
-  <section class="rounded-2xl border border-line bg-surface p-4">
+<div class="grid items-start gap-6 pt-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+  <section class="rounded-2xl border border-line bg-surface shadow-sm p-4">
     @if (videoUrl(); as url) {
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 class="min-w-0 truncate font-semibold">{{ fileName() }}</h2>
@@ -55,7 +55,7 @@
     }
   </section>
 
-  <section class="rounded-2xl border border-line bg-surface p-5">
+  <section class="rounded-2xl border border-line bg-surface shadow-sm p-5">
     <h2 class="font-semibold">Opciones</h2>
 
     <label class="mt-4 flex cursor-pointer items-center gap-3 text-sm font-medium">

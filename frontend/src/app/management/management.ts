@@ -4,6 +4,7 @@ import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { StatTile } from '../shared/stat-tile';
 import { Coverage, buildStaffing } from './management-data';
+import { PageHeader } from '../shared/page-header';
 
 const COVERAGE: Record<Coverage, { label: string; icon: IconName; color: string }> = {
   covered: { label: 'Cubierta', icon: 'check', color: 'text-accent' },
@@ -14,7 +15,7 @@ const COVERAGE: Record<Coverage, { label: string; icon: IconName; color: string 
 /** Staff of the selected store against how busy each zone is. */
 @Component({
   selector: 'app-management',
-  imports: [Icon, StatTile],
+  imports: [PageHeader, Icon, StatTile],
   templateUrl: './management.html',
 })
 export class Management {

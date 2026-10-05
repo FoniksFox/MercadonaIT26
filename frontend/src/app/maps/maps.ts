@@ -1,11 +1,14 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { formatNumber } from '../core/format';
 import { seededRandom } from '../core/random';
 import { Supermarkets } from '../core/supermarkets';
 import { ZONES } from '../core/zones';
 import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
-import { CrowdSnapshot, MapPeriod, StoreHeatmap } from '../shared/heat/store-heatmap';
+import { CrowdSnapshot, MapPeriod, MapView, StoreHeatmap } from '../shared/heat/store-heatmap';
 import { Icon } from '../shared/icon';
+import { IconName } from '../shared/icons';
+import { PageHeader } from '../shared/page-header';
 
 const DAYS = { today: 1, week: 7, month: 30 } as const;
 /** Opening hours used to scale today's placeholder totals. */
@@ -17,11 +20,15 @@ const QUEUE_FROM = 5;
 
 const SHORT_DATE = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
 
-/** Home screen: the heatmap of the selected store, live or over a past period. */
+/**
+ * Home screen: the selected store over its floor plan, as heat, flow or
+ * occupancy, live or over a past period.
+ */
 @Component({
   selector: 'app-maps',
-  imports: [Icon, StoreHeatmap],
+  imports: [Icon, PageHeader, RouterLink, StoreHeatmap],
   templateUrl: './maps.html',
+  styleUrl: './maps.css',
   host: {
     '(document:click)': 'closeMenuIfOutside($event)',
     '(keydown.escape)': 'menuOpen.set(false)',
@@ -30,11 +37,17 @@ const SHORT_DATE = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'sh
 export class Maps {
   protected readonly supermarket = inject(Supermarkets).current;
 
+  protected readonly view = signal<MapView>('heatmap');
   protected readonly period = signal<MapPeriod>('live');
   protected readonly menuOpen = signal(false);
   protected readonly snapshot = signal<CrowdSnapshot | null>(null);
 
   protected readonly heatGradient = HEAT_GRADIENT;
+  protected readonly views: readonly { id: MapView; label: string; icon: IconName }[] = [
+    { id: 'heatmap', label: 'Mapa de calor', icon: 'flame' },
+    { id: 'flow', label: 'Mapa de flujo', icon: 'wind' },
+    { id: 'occupancy', label: 'Ocupación', icon: 'layout' },
+  ];
   /** Past periods; the first one is the default when switching to "Histórico". */
   protected readonly pastPeriods = [
     { id: 'today', label: 'Hoy' },
@@ -45,6 +58,9 @@ export class Maps {
   private readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
 
   protected readonly live = computed(() => this.period() === 'live');
+  protected readonly viewLabel = computed(
+    () => this.views.find((option) => option.id === this.view())!.label,
+  );
 
   protected readonly pastLabel = computed(() => {
     const selected = this.pastPeriods.find((option) => option.id === this.period());
@@ -67,16 +83,28 @@ export class Maps {
     return `${SHORT_DATE.format(start)} – ${SHORT_DATE.format(end)}`;
   });
 
+  /** What the list beside the map shows: occupancy in that view, people or time otherwise. */
+  protected readonly zoneList = computed(() => {
+    if (this.view() === 'occupancy') {
+      return { title: 'Ocupación por zona', unit: ' %' };
+    }
+    return this.live()
+      ? { title: 'Personas por zona', unit: '' }
+      : { title: 'Tiempo por zona', unit: ' %' };
+  });
+
   protected readonly zoneRows = computed(() => {
-    const byZone = this.snapshot()?.byZone;
-    if (!byZone) {
+    const snapshot = this.snapshot();
+    if (!snapshot) {
       return [];
     }
-    const max = Math.max(1, ...Object.values(byZone));
+    const values = this.view() === 'occupancy' ? snapshot.occupancy : snapshot.byZone;
+    const max = Math.max(1, ...Object.values(values));
     return ZONES.map((zone) => ({
       zone,
-      value: byZone[zone.id],
-      fill: (byZone[zone.id] / max) * 100,
+      value: values[zone.id],
+      fill: (values[zone.id] / max) * 100,
+      people: snapshot.byZone[zone.id],
     }));
   });
 
@@ -90,11 +118,11 @@ export class Maps {
       return [];
     }
     return this.zoneRows()
-      .filter((row) => row.value >= (row.zone.id === 'checkout' ? QUEUE_FROM : CROWDED_FROM))
+      .filter((row) => row.people >= (row.zone.id === 'checkout' ? QUEUE_FROM : CROWDED_FROM))
       .map((row) =>
         row.zone.id === 'checkout'
-          ? { zone: row.zone, text: `${row.value} personas en cola`, action: 'Abrir otra caja' }
-          : { zone: row.zone, text: `${row.value} personas a la vez`, action: 'Revisar la zona' },
+          ? { zone: row.zone, text: `${row.people} personas en cola`, action: 'Abrir otra caja' }
+          : { zone: row.zone, text: `${row.people} personas a la vez`, action: 'Revisar la zona' },
       );
   });
 

@@ -1,8 +1,7 @@
-<header class="px-6 pt-6 md:px-8">
-  <h1 class="text-2xl font-bold tracking-tight">Gestión</h1>
-</header>
+<div class="mx-auto max-w-7xl px-6 py-8 md:px-8 md:py-10">
+<app-page-header title="Gestión" />
 
-<div class="space-y-6 px-6 py-6 md:px-8">
+<div class="mt-8 space-y-6">
   <div class="grid gap-4 sm:grid-cols-3">
     <app-stat-tile label="Personal en turno" icon="staff" [value]="'' + staffing().onShift" />
     <app-stat-tile label="Zonas con falta de personal" icon="alert" [value]="'' + shortZones()" />
@@ -13,7 +12,7 @@
     />
   </div>
 
-  <section class="rounded-2xl border border-line bg-surface p-5">
+  <section class="rounded-2xl border border-line bg-surface shadow-sm p-5">
     <h2 class="font-semibold">Personal por zona</h2>
     <div class="mt-3 overflow-x-auto">
       <table class="w-full min-w-[40rem] text-sm">
@@ -50,4 +49,5 @@
       </table>
     </div>
   </section>
+</div>
 </div>

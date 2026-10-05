@@ -10,14 +10,16 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should show the brand and the four views in the sidebar', async () => {
+  it('should show the brand, the views and the store switch in the sidebar', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const sidebar = (fixture.nativeElement as HTMLElement).querySelector('aside')!;
 
     expect(sidebar.textContent).toContain('MercaTrack');
     const links = [...sidebar.querySelectorAll('nav a')].map((link) => link.textContent?.trim());
-    expect(links).toEqual(['Mapas', 'Estadísticas', 'Gestión', 'Configuración']);
+    expect(links.slice(0, 4)).toEqual(['Mapas', 'Estadísticas', 'Gestión', 'Configuración']);
+    expect(links[4]).toContain('Valencia Centro');
+    expect(links[4]).toContain('Cambiar de Mercadona');
   });
 
   it('should start in light mode and switch to dark with the toggle', async () => {

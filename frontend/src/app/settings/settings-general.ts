@@ -8,8 +8,8 @@ import { IconName } from '../shared/icons';
   selector: 'app-settings-general',
   imports: [Icon],
   template: `
-    <div class="grid items-start gap-6 px-6 py-6 md:px-8 xl:grid-cols-2">
-      <section class="rounded-2xl border border-line bg-surface p-5">
+    <div class="grid items-start gap-6 pt-6 xl:grid-cols-2">
+      <section class="rounded-2xl border border-line bg-surface shadow-sm p-5">
         <h2 class="font-semibold">Vídeo</h2>
 
         <dl class="mt-4 space-y-3 text-sm">
@@ -37,7 +37,7 @@ import { IconName } from '../shared/icons';
         </ul>
       </section>
 
-      <section class="rounded-2xl border border-line bg-surface p-5">
+      <section class="rounded-2xl border border-line bg-surface shadow-sm p-5">
         <h2 class="font-semibold">Apariencia</h2>
 
         <div class="mt-4 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Tema">

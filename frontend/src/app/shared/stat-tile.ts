@@ -9,7 +9,7 @@ import { IconName } from './icons';
   imports: [Icon],
   host: { class: 'block' },
   template: `
-    <div class="h-full rounded-2xl border border-line bg-surface p-5">
+    <div class="h-full rounded-2xl border border-line bg-surface shadow-sm p-5">
       <p class="flex items-center gap-2 text-sm text-ink-2">
         <app-icon [name]="icon()" class="size-4" />
         {{ label() }}

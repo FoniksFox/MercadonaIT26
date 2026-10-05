@@ -3,8 +3,10 @@
 /* Light is the default theme; dark is opt-in through the .dark class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Brand palette (see colors.txt). */
 @theme {
+  --font-sans: "Montserrat", "Aptos", "Segoe UI", sans-serif;
+
+  /* Brand palette (see colors.txt). */
   --color-brand-green: #149e6e;
   --color-brand-yellow-green: #bfd148;
   --color-brand-orange: #ffa100;
@@ -24,6 +26,7 @@
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
   --color-sidebar: var(--sidebar);
+  --color-sidebar-panel: var(--sidebar-panel);
   --color-series: var(--series);
   --color-grid: var(--grid);
 }
@@ -40,7 +43,9 @@
   /* Brand green stepped down so white text on it clears 4.5:1. */
   --accent: #0e7c56;
   --on-accent: #ffffff;
-  --sidebar: #0e7c56;
+  --sidebar: #0a5c40;
+  --sidebar-panel: #0e7c56;
+  --sidebar-indicator: #12936a;
   /* Charts. */
   --series: #149e6e;
   --grid: #e3e9e3;
@@ -63,7 +68,9 @@
   --ink-3: #8a988f;
   --accent: #1aa877;
   --on-accent: #06140e;
-  --sidebar: #10241b;
+  --sidebar: #0a1a13;
+  --sidebar-panel: #11291f;
+  --sidebar-indicator: #168c64;
   --series: #1aa877;
   --grid: #24312b;
   --seq-low: #1b2621;
@@ -77,7 +84,7 @@
   body {
     background: var(--canvas);
     color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
   }
 
   :focus-visible {
@@ -88,5 +95,59 @@
   input[type="range"],
   input[type="checkbox"] {
     accent-color: var(--accent);
+  }
+}
+
+/* The page slides in from the side of the sidebar entry it comes from. */
+@keyframes content-slide-down {
+  from { opacity: 0; transform: translateY(-22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes content-slide-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tab-indicator-squeeze {
+  0% {
+    transform: scaleY(0.72);
+  }
+  45% {
+    transform: scaleY(1.08);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.content-slide-down { animation: content-slide-down 360ms ease-out; }
+.content-slide-up { animation: content-slide-up 360ms ease-out; }
+
+/* Highlight that slides to the active sidebar entry; its box is set inline. */
+.tab-active-indicator {
+  position: absolute;
+  z-index: 0;
+  border-radius: 0.75rem;
+  background: var(--sidebar-indicator);
+  box-shadow: 0 8px 16px rgb(6 78 59 / 0.2);
+  transition:
+    top 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    left 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.is-indicator-animating .tab-active-indicator {
+  animation: tab-indicator-squeeze 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-slide-down,
+  .content-slide-up,
+  .tab-active-indicator {
+    animation: none;
+    transition: none;
   }
 }
