@@ -1,0 +1,5 @@
+Green: #149E6E
+Yellow-Green: #BFD148
+Orange: #FFA100
+Red: #E33A2F
+Burgundy: #97004A
