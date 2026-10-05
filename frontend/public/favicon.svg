@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <!-- MercaTrack mark: the track of a shopper weaving between two shelves, from where they came in (ring) to where they are now (dot). -->
-  <rect width="64" height="64" rx="14" fill="#0a5c40"/>
+  <rect width="64" height="64" rx="14" fill="#149e6e"/>
   <rect x="19" y="25" width="6" height="30.5" rx="3" fill="#ffffff" fill-opacity="0.32"/>
   <rect x="39" y="8.5" width="6" height="30.5" rx="3" fill="#ffffff" fill-opacity="0.32"/>
   <path d="M12 43V21a10 10 0 0 1 20 0v22a10 10 0 0 0 20 0V23" fill="none" stroke="#ffa100" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="12" cy="52.5" r="3.75" fill="none" stroke="#ffffff" stroke-width="2.5"/>
-  <circle cx="52" cy="16.5" r="7" fill="#ffffff" stroke="#0a5c40" stroke-width="2.5"/>
+  <circle cx="52" cy="16.5" r="7" fill="#ffffff" stroke="#149e6e" stroke-width="2.5"/>
 </svg>
