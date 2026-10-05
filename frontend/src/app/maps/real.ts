@@ -11,13 +11,14 @@ import {
 import { BackendConnection, ChannelStatus } from '../core/backend-connection';
 import { BackendFrame, jpegSource } from '../core/backend-protocol';
 import { formatNumber } from '../core/format';
-import { paintFlow, paintPeople, paintWalkedFloor } from '../shared/heat/crowd-painting';
+import { paintFlow, paintPeople, paintShelves } from '../shared/heat/crowd-painting';
 import { FlowField } from '../shared/heat/flow-field';
 import { HeatField } from '../shared/heat/heat-field';
 import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
 import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
+import { REAL_SHELVES } from './real-layout';
 
 type RealView = 'heatmap' | 'flow' | 'occupancy';
 
@@ -38,8 +39,6 @@ const BLOB_RADIUS = 3;
 const MIN_HOTTEST = 1.5;
 /** Share of the recent heat left after one second: a trail is gone in about a quarter of a minute. */
 const RECENT_RETENTION = 0.6;
-/** Seconds of accumulated presence from which a spot is drawn as corridor. */
-const WALKED_SECONDS = 0.05;
 /** Longest gap between two messages that still counts as continuous presence. */
 const MAX_GAP_SECONDS = 0.25;
 
@@ -276,20 +275,11 @@ export class RealMap {
     const style = getComputedStyle(canvas);
     const accent = style.getPropertyValue('--accent').trim();
     if (!this.showCamera()) {
-      // Without the camera, draw the floor that the movement itself reveals.
-      paintWalkedFloor(
-        context,
-        this.total,
-        width,
-        height,
-        WALKED_SECONDS,
-        {
-          corridor: style.getPropertyValue('--plan-floor').trim(),
-          block: style.getPropertyValue('--plan-fixture').trim(),
-          outline: style.getPropertyValue('--plan-wall').trim(),
-        },
-        ratio,
-      );
+      // Without the camera, a plan like the simulated one: the shelves, fixed, on plain floor.
+      paintShelves(context, REAL_SHELVES, width, height, {
+        floor: style.getPropertyValue('--plan-floor').trim(),
+        shelf: style.getPropertyValue('--plan-fixture').trim(),
+      });
     }
     switch (this.view()) {
       case 'heatmap':

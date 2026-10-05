@@ -1,5 +1,4 @@
 import { FlowVector } from './flow-field';
-import { HeatField } from './heat-field';
 
 // Drawing shared by the simulated map and the real one.
 
@@ -53,91 +52,34 @@ export function paintFlow(
   context.globalAlpha = 1;
 }
 
+/** A rectangle in fractions of the drawing (0..1), so it holds at any size. */
+export interface FloorBlock {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 /**
- * A schematic floor inferred from movement: a corridor wherever `field` holds
- * at least `walked` seconds of presence, and a solid block (shelves, counters,
- * anything nobody walks through) everywhere else.
- *
- * The corridor outline is the contour of the field at that level (marching
- * squares), so it comes out smooth instead of following the grid cells.
+ * A schematic floor like the one of the simulated store: plain floor with the
+ * shelves as solid blocks. Whatever is drawn afterwards (heat, flow, people)
+ * shows the aisles between them.
  */
-export function paintWalkedFloor(
+export function paintShelves(
   context: CanvasRenderingContext2D,
-  field: HeatField,
+  shelves: readonly FloorBlock[],
   width: number,
   height: number,
-  walked: number,
-  colors: { corridor: string; block: string; outline: string },
-  ratio: number,
+  colors: { floor: string; shelf: string },
 ): void {
-  context.fillStyle = colors.block;
+  context.fillStyle = colors.floor;
   context.fillRect(0, 0, width, height);
-
-  const cellWidth = width / field.cols;
-  const cellHeight = height / field.rows;
-  // Samples sit at cell centres; outside the grid the nearest cell is repeated,
-  // so a corridor that reaches the edge of the frame is drawn up to the edge.
-  const sample = (col: number, row: number) =>
-    field.valueAt(
-      Math.min(field.cols - 1, Math.max(0, col)),
-      Math.min(field.rows - 1, Math.max(0, row)),
-    );
-
-  const floor = new Path2D();
-  const outline = new Path2D();
-  for (let row = -1; row < field.rows; row++) {
-    for (let col = -1; col < field.cols; col++) {
-      // Corners of this square, clockwise from the top left.
-      const corners = [
-        { x: col, y: row },
-        { x: col + 1, y: row },
-        { x: col + 1, y: row + 1 },
-        { x: col, y: row + 1 },
-      ].map((corner) => ({ ...corner, value: sample(corner.x, corner.y) }));
-      if (corners.every((corner) => corner.value < walked)) {
-        continue;
-      }
-
-      // Walk the square: keep the corners inside the corridor and the points
-      // where the contour crosses an edge.
-      const polygon: { x: number; y: number; crossing: boolean }[] = [];
-      for (let i = 0; i < 4; i++) {
-        const from = corners[i];
-        const to = corners[(i + 1) % 4];
-        if (from.value >= walked) {
-          polygon.push({ x: from.x, y: from.y, crossing: false });
-        }
-        if (from.value >= walked !== to.value >= walked) {
-          const t = (walked - from.value) / (to.value - from.value);
-          polygon.push({
-            x: from.x + (to.x - from.x) * t,
-            y: from.y + (to.y - from.y) * t,
-            crossing: true,
-          });
-        }
-      }
-
-      const px = (point: { x: number }) => (point.x + 0.5) * cellWidth;
-      const py = (point: { y: number }) => (point.y + 0.5) * cellHeight;
-      polygon.forEach((point, i) =>
-        i === 0 ? floor.moveTo(px(point), py(point)) : floor.lineTo(px(point), py(point)),
-      );
-      floor.closePath();
-      // The contour itself: the sides of the polygon that join two crossings.
-      polygon.forEach((point, i) => {
-        const next = polygon[(i + 1) % polygon.length];
-        if (point.crossing && next.crossing) {
-          outline.moveTo(px(point), py(point));
-          outline.lineTo(px(next), py(next));
-        }
-      });
-    }
+  context.fillStyle = colors.shelf;
+  // Same corner as the shelves of the simulated plan (6 units in a plan 1000 wide).
+  const corner = width * 0.006;
+  for (const shelf of shelves) {
+    context.beginPath();
+    context.roundRect(shelf.x * width, shelf.y * height, shelf.w * width, shelf.h * height, corner);
+    context.fill();
   }
-
-  context.fillStyle = colors.corridor;
-  context.fill(floor);
-  context.strokeStyle = colors.outline;
-  context.lineWidth = 1.5 * ratio;
-  context.lineCap = 'round';
-  context.stroke(outline);
 }
