@@ -35,6 +35,7 @@ class VisionProcessor:
             'show_boxes': True,
             'show_flow': True,
             'heatmap_only': False,
+            'stability_mode': True,
             'intensity': 5.0,
             'radius': 31,
             'decay': 0.85,
@@ -132,19 +133,26 @@ class VisionProcessor:
                 is_side_clipped = (x1 <= 3 or x2 >= target_w - 3) and (w_box < 25)
                 is_clipped = is_bottom_clipped or is_side_clipped
 
-                # Posición bruta: centroide del rectángulo (mucho más estable que los pies)
-                cx_raw = (x1 + x2) / 2.0
-                cy_raw = (y1 + y2) / 2.0
-                
-                # Aplicar suavizado (Exponential Moving Average) para evitar saltos bruscos
-                alpha = 0.2  # Factor de suavizado
-                if track_id in self.last_track_positions:
-                    prev_x, prev_y, prev_clipped = self.last_track_positions[track_id]
-                    cx = int(alpha * cx_raw + (1 - alpha) * prev_x)
-                    cy = int(alpha * cy_raw + (1 - alpha) * prev_y)
+                # Posición según modo de estabilidad
+                prev_pos = self.last_track_positions.get(track_id)
+                if prev_pos is not None:
+                    prev_x, prev_y, prev_clipped = prev_pos
+
+                if self.config.get('stability_mode', True):
+                    # Mejora de estabilidad: Centroide de la persona + Filtro suavizador EMA
+                    cx_raw = (x1 + x2) / 2.0
+                    cy_raw = (y1 + y2) / 2.0
+                    alpha = 0.2  # Factor EMA (suavizado temporal)
+                    if prev_pos is not None:
+                        cx = int(alpha * cx_raw + (1 - alpha) * prev_x)
+                        cy = int(alpha * cy_raw + (1 - alpha) * prev_y)
+                    else:
+                        cx = int(cx_raw)
+                        cy = int(cy_raw)
                 else:
-                    cx = int(cx_raw)
-                    cy = int(cy_raw)
+                    # Modo clásico/base: base de los pies directa (y2) sin suavizado
+                    cx = int((x1 + x2) / 2.0)
+                    cy = int(y2)
                 
                 # Asegurar coordenadas válidas dentro del lienzo (sin el pad forzado de 20px)
                 cx = int(np.clip(cx, 0, target_w - 1))

@@ -44,6 +44,7 @@ class ConfigUpdate(BaseModel):
     flow_decay: Optional[float] = None
     confidence: Optional[float] = None
     resolution: Optional[int] = None
+    stability_mode: Optional[bool] = None
 
 
 def get_local_ip():

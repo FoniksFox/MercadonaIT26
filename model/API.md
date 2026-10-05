@@ -92,7 +92,8 @@ Devuelve el estado completo de la configuración del motor de IA.
     "decay": 0.85,
     "flow_decay": 0.90,
     "confidence": 0.4,
-    "resolution": 640
+    "resolution": 640,
+    "stability_mode": true
   }
   ```
 
@@ -105,10 +106,12 @@ Permite alterar la configuración del motor en caliente (sin reiniciar). Todos l
   ```json
   {
     "processing_enabled": false,
+    "stability_mode": false,
     "radius": 51,
     "confidence": 0.5
   }
   ```
+  - `stability_mode` (booleano, por defecto `true`): Activa las mejoras de estabilidad (cálculo de centroide de masa y filtro de suavizado temporal EMA). Al ponerlo en `false`, vuelve al modo clásico (base inferior de la caja $y_2$ en bruto sin suavizado) para comparar el antes y el después.
 - **Respuesta Exitosa (200 OK)**: Devuelve el objeto de configuración actualizado.
 
 ### 3. Limpiar Datos Históricos (Reset)

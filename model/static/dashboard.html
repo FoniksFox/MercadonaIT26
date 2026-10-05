@@ -298,6 +298,10 @@
                 <input type="checkbox" id="ctrl-boxes" checked>
                 Cajas de detección
             </label>
+            <label class="toggle-row" style="color: #38bdf8;">
+                <input type="checkbox" id="ctrl-stability" checked>
+                Estabilización (Centroide + EMA)
+            </label>
         </div>
 
         <hr>
@@ -402,6 +406,7 @@
                     show_pheat: document.getElementById('ctrl-pheat').checked,
                     show_flow: document.getElementById('ctrl-flow').checked,
                     show_boxes: document.getElementById('ctrl-boxes').checked,
+                    stability_mode: document.getElementById('ctrl-stability').checked,
                     decay: parseFloat(document.getElementById('ctrl-decay').value),
                     radius: parseInt(document.getElementById('ctrl-radius').value),
                     confidence: parseFloat(document.getElementById('ctrl-conf').value)
