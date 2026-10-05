@@ -10,9 +10,9 @@ export type StatsRange = 'today' | 'week' | 'month';
 export const OPENING_HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] as const;
 export const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'] as const;
 
-/** How busy each opening hour and each weekday is, relative to the busiest. */
-const HOUR_SHAPE = [0.45, 0.7, 0.9, 1, 0.95, 0.6, 0.45, 0.5, 0.7, 0.95, 1.1, 1, 0.6];
-const DAY_SHAPE = [0.95, 0.85, 0.85, 0.9, 1.1, 1.3];
+/** How busy each opening hour and each weekday is, relative to a typical peak. */
+export const HOUR_SHAPE = [0.45, 0.7, 0.9, 1, 0.95, 0.6, 0.45, 0.5, 0.7, 0.95, 1.1, 1, 0.6];
+export const DAY_SHAPE = [0.95, 0.85, 0.85, 0.9, 1.1, 1.3];
 const PEAK_PEOPLE_PER_HOUR = 240;
 const OPEN_DAYS = { week: 6, month: 26 } as const;
 

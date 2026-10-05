@@ -1,53 +1,216 @@
 <div class="mx-auto max-w-7xl px-6 py-6 md:px-8 md:py-8">
-<app-page-header title="Gestión" />
+  <app-page-header title="Gestión" />
 
-<div class="page-content mt-8 space-y-6">
-  <div class="grid gap-4 sm:grid-cols-3">
-    <app-stat-tile label="Personal en turno" icon="staff" [value]="'' + staffing().onShift" />
-    <app-stat-tile label="Zonas con falta de personal" icon="alert" [value]="'' + shortZones()" />
-    <app-stat-tile
-      label="Cajas abiertas"
-      icon="checkout"
-      [value]="staffing().openTills + ' de ' + staffing().totalTills"
-    />
+  <nav
+    class="page-content mt-6 flex gap-6 border-b border-line text-sm font-semibold"
+    aria-label="Periodo de gestión"
+    role="tablist"
+  >
+    @for (option of ranges; track option.id) {
+      <button
+        type="button"
+        role="tab"
+        class="-mb-px flex items-center gap-2 border-b-2 pb-3"
+        [class]="
+          range() === option.id
+            ? 'border-accent text-ink'
+            : 'border-transparent text-ink-2 hover:text-ink'
+        "
+        [attr.aria-selected]="range() === option.id"
+        (click)="range.set(option.id)"
+      >
+        @if (option.id === 'live') {
+          <span
+            class="size-2 rounded-full bg-brand-red"
+            [class.animate-pulse]="range() === 'live'"
+          ></span>
+        }
+        {{ option.label }}
+      </button>
+    }
+  </nav>
+
+  <div class="page-content mt-6 space-y-6">
+    @if (range() === 'live') {
+      @if (now(); as store) {
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="live-tiles">
+          <app-stat-tile label="Clientes en la tienda" icon="cart" [value]="'' + store.customers" />
+          <app-stat-tile label="Personal en turno" icon="staff" [value]="'' + store.onShift" />
+          <app-stat-tile
+            label="Zonas con falta de personal"
+            icon="alert"
+            [value]="'' + store.shortZones"
+          />
+          <app-stat-tile label="Espera estimada en cajas" icon="timer" [value]="tillWait()" />
+        </div>
+
+        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 class="font-semibold">Personal por zona</h2>
+              <p class="text-sm text-ink-2">Cajas abiertas: {{ tills }}</p>
+            </div>
+            <div class="mt-3 overflow-x-auto">
+              <table class="w-full min-w-[40rem] text-sm" data-testid="live-zones">
+                <thead>
+                  <tr class="border-b border-line text-left text-ink-2">
+                    <th scope="col" class="px-2 py-2 font-medium">Zona</th>
+                    <th scope="col" class="px-2 py-2 text-right font-medium">Clientes</th>
+                    <th scope="col" class="px-2 py-2 text-right font-medium">Personal</th>
+                    <th scope="col" class="px-2 py-2 pl-8 font-medium">Estado</th>
+                    <th scope="col" class="px-2 py-2 font-medium">Acción sugerida</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of liveRows(); track row.zone.id) {
+                    <tr class="border-b border-line last:border-0">
+                      <th scope="row" class="px-2 py-3 text-left font-normal whitespace-nowrap">
+                        <span class="flex items-center gap-3">
+                          <app-icon [name]="row.zone.icon" class="size-5 text-ink-3" />
+                          {{ row.zone.name }}
+                        </span>
+                      </th>
+                      <td class="px-2 py-3 text-right tabular-nums">{{ row.customers }}</td>
+                      <td class="px-2 py-3 text-right tabular-nums">{{ row.staff }}</td>
+                      <td class="px-2 py-3 pl-8 whitespace-nowrap">
+                        <span class="flex items-center gap-2">
+                          <app-icon
+                            [name]="row.status.icon"
+                            class="size-5"
+                            [class]="row.status.color"
+                          />
+                          <span [class.font-semibold]="row.coverage === 'short'">
+                            {{ row.status.label }}
+                          </span>
+                        </span>
+                      </td>
+                      <td
+                        class="px-2 py-3 whitespace-nowrap"
+                        [class.text-ink-3]="!row.action"
+                        [class.font-semibold]="row.coverage === 'short'"
+                      >
+                        {{ row.action ?? '–' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+            <h2 class="font-semibold">Avisos</h2>
+            <ol class="mt-3 space-y-3 text-sm" data-testid="events">
+              @for (event of events(); track event.at) {
+                <li class="flex items-start gap-3">
+                  <app-icon
+                    [name]="event.short ? 'alert' : 'check'"
+                    class="mt-0.5 size-5"
+                    [class]="event.short ? 'text-brand-red' : 'text-accent'"
+                  />
+                  <div class="min-w-0">
+                    <p>
+                      <span class="font-semibold">{{ event.zone.name }}:</span>
+                      {{ event.text }}
+                    </p>
+                    <p class="tabular-nums text-ink-2">{{ event.time }}</p>
+                  </div>
+                </li>
+              } @empty {
+                <li class="flex items-center gap-3 text-ink-2">
+                  <app-icon name="check" class="size-5 text-accent" />
+                  Sin avisos
+                </li>
+              }
+            </ol>
+          </section>
+        </div>
+      }
+    } @else if (past(); as period) {
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="past-tiles">
+        <app-stat-tile
+          label="Horas con falta de personal"
+          icon="alert"
+          [value]="period.shortHours + ' h'"
+        />
+        <app-stat-tile
+          label="Horas bien cubiertas"
+          icon="check"
+          [value]="period.coveredShare + ' %'"
+        />
+        <app-stat-tile
+          label="Donde más faltó"
+          [icon]="period.worstZone?.icon ?? 'staff'"
+          [value]="period.worstZone?.name ?? 'En ninguna zona'"
+        />
+        <app-stat-tile
+          label="Momento más crítico"
+          icon="clock"
+          [value]="period.worstSlot ?? 'Ninguno'"
+        />
+      </div>
+
+      @if (anyShortage()) {
+        <div class="grid gap-6 xl:grid-cols-2">
+          <app-chart-card title="Horas con falta de personal por zona">
+            <app-bar-chart [rows]="shortRows()" />
+            <app-data-table
+              chartTable
+              [columns]="['Zona', 'Horas con falta']"
+              [rows]="shortTable()"
+            />
+          </app-chart-card>
+
+          <app-chart-card
+            title="Cuándo faltó personal"
+            unit="Personas de menos en toda la tienda, de media, en cada hora"
+          >
+            <app-heat-grid [rows]="gridRows()" [columns]="gridColumns()" unit="personas de menos" />
+            <app-data-table chartTable [columns]="gridTableColumns()" [rows]="gridTable()" />
+          </app-chart-card>
+        </div>
+      }
+
+      <section class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+        <h2 class="font-semibold">Qué cambiar</h2>
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full min-w-[44rem] text-sm" data-testid="recommendations">
+            <thead>
+              <tr class="border-b border-line text-left text-ink-2">
+                <th scope="col" class="px-2 py-2 font-medium">Zona</th>
+                <th scope="col" class="px-2 py-2 text-right font-medium">Horas bien cubiertas</th>
+                <th scope="col" class="px-2 py-2 text-right font-medium">Horas con falta</th>
+                <th scope="col" class="px-2 py-2 text-right font-medium">Máximo que faltó</th>
+                <th scope="col" class="px-2 py-2 pl-8 font-medium">Recomendación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of period.zones; track row.zone.id) {
+                <tr class="border-b border-line last:border-0">
+                  <th scope="row" class="px-2 py-3 text-left font-normal">
+                    <span class="flex items-center gap-3">
+                      <app-icon [name]="row.zone.icon" class="size-5 text-ink-3" />
+                      {{ row.zone.name }}
+                    </span>
+                  </th>
+                  <td class="px-2 py-3 text-right tabular-nums">{{ row.coveredShare }} %</td>
+                  <td class="px-2 py-3 text-right tabular-nums">{{ row.shortHours }} h</td>
+                  <td class="px-2 py-3 text-right tabular-nums">
+                    {{ row.peakMissing || '–' }}
+                  </td>
+                  <td
+                    class="px-2 py-3 pl-8"
+                    [class.text-ink-3]="!row.recommendation"
+                    [class.font-semibold]="row.recommendation"
+                  >
+                    {{ row.recommendation ?? 'Sin cambios' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
   </div>
-
-  <section class="rounded-2xl border border-line bg-surface shadow-sm p-5">
-    <h2 class="font-semibold">Personal por zona</h2>
-    <div class="mt-3 overflow-x-auto">
-      <table class="w-full min-w-[40rem] text-sm">
-        <thead>
-          <tr class="border-b border-line text-left text-ink-2">
-            <th scope="col" class="px-2 py-2 font-medium">Zona</th>
-            <th scope="col" class="px-2 py-2 text-right font-medium">Clientes ahora</th>
-            <th scope="col" class="px-2 py-2 text-right font-medium">Personal</th>
-            <th scope="col" class="px-2 py-2 pl-8 font-medium">Estado</th>
-            <th scope="col" class="px-2 py-2 font-medium">Acción sugerida</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of rows(); track row.zone.id) {
-            <tr class="border-b border-line last:border-0">
-              <th scope="row" class="px-2 py-3 text-left font-normal">
-                <span class="flex items-center gap-3">
-                  <app-icon [name]="row.zone.icon" class="size-5 text-ink-3" />
-                  {{ row.zone.name }}
-                </span>
-              </th>
-              <td class="px-2 py-3 text-right tabular-nums">{{ row.people }}</td>
-              <td class="px-2 py-3 text-right tabular-nums">{{ row.staff }}</td>
-              <td class="px-2 py-3 pl-8">
-                <span class="flex items-center gap-2">
-                  <app-icon [name]="row.status.icon" class="size-5" [class]="row.status.color" />
-                  <span [class.font-semibold]="row.coverage === 'short'">{{ row.status.label }}</span>
-                </span>
-              </td>
-              <td class="px-2 py-3" [class.text-ink-3]="!row.action">{{ row.action ?? '–' }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
-</div>
 </div>
