@@ -1,41 +1,43 @@
-# MercaFlow
+# MercaTrack
 
 > **La tienda que entiende su propio movimiento.**
 
-Entry for the Mercadona IT UPV hackathon 2026 — theme **"El supermercado del
-futuro"**.
+Proyecto para la hackathon de la Cátedra Mercadona IT organizado en la UPV 2026 — temática **"El supermercado del futuro"**.
 
-MercaFlow analyzes surveillance-style video of a supermarket (and, later, a
-warehouse) with artificial vision to extract measurable data about how people
-move through the space:
+MercaTrack analiza vídeos de estilo vigilancia de un supermercado utilizando visión artificial para extraer datos medibles sobre cómo se mueven las personas por el espacio:
 
-- **Heatmap** of where people move and stand over time.
-- **Vector field** of the direction and magnitude of movement.
+- **Mapa de calor (Regular)**: Visualiza por dónde se mueven y se detienen las personas en tiempo real, con una estela de decaimiento temporal.
+- **Mapa de calor (Persistente)**: Acumula todo el movimiento a lo largo del tiempo sin decaimiento para mostrar los pasillos y zonas con mayor tráfico.
 
-The focus is on **data extraction** — turning camera footage into anonymous,
-actionable information (layout optimization, queue detection, staffing) is
-left as suggestions.
+El enfoque principal es la **extracción de datos** — transformar las grabaciones de cámara en información anónima y procesable (optimización de la distribución, detección de colas, gestión de personal).
 
-## Repository layout
+## Estructura del repositorio
 
-```
-backend/     Flask + PyTorch (YOLO) service — detection, tracking, heatmap, vector field
-frontend/    Angular + Tailwind web app — upload video, view results
-```
+- `model/` — Servicio backend con FastAPI + PyTorch (YOLOv8) para la detección en tiempo real, seguimiento y generación de mapas de calor vía WebSockets. Incluye una dashboard estática integrada.
+- `frontend/` — Aplicación web en Angular + Tailwind para subir vídeos y visualizar los resultados.
 
-## Quick start
+## Inicio rápido
 
-### Backend
+### Backend (Model)
+
+El motor de IA y la API están construidos con FastAPI y YOLOv8.
 
 ```bash
-cd backend
-uv sync
-uv run flask --app app run --debug
+cd model
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
-The API runs at `http://127.0.0.1:5000`.
+La API y los WebSockets se ejecutan en `http://127.0.0.1:8000`.
+Puedes acceder al visualizador en tiempo real (dashboard) en `http://127.0.0.1:8000/static/dashboard.html`.
+
+Para consultar la documentación completa de los endpoints de la API, revisa [`model/API.md`](model/API.md).
 
 ### Frontend
+
+El frontend en Angular se conecta al backend para renderizar los datos.
 
 ```bash
 cd frontend
@@ -43,13 +45,21 @@ npm install
 npm start
 ```
 
-Open `http://localhost:4200`.
+Abre `http://localhost:4200`.
 
-## How it works
+## Cómo funciona
 
-1. Upload a video via the REST API (or the web app).
-2. YOLO detects people; a tracker follows each person across frames.
-3. Trajectories are accumulated into a **heatmap** and a **vector field**.
-4. Results are returned as images + JSON trajectories.
+1. Se procesa una señal de cámara o vídeo fotograma a fotograma.
+2. Un modelo YOLOv8 (`yolov8s.pt`) detecta a las personas. Está optimizado con seguimiento de centroides mediante suavizado EMA (Media Móvil Exponencial) para manejar vistas cenitales (desde arriba) de forma eficaz.
+3. El algoritmo ByteTrack sigue a cada persona de forma única entre fotogramas.
+4. Las trayectorias se acumulan en **mapas de calor** tanto regulares como persistentes.
+5. Los datos se transmiten en tiempo real vía WebSockets a los clientes conectados (frontend/dashboard).
 
-See `AGENTS.md` for conventions and the full MVP scope.
+## Equipo
+
+- Boris: Organización + presentación
+- Salva: Organización + soporte
+- Daniel: IA + backend
+- Bohdan: IA + backend
+- Edy: Frontend
+- Carlos: Frontend
