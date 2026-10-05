@@ -4,6 +4,7 @@ Este documento describe los endpoints disponibles en el backend (FastAPI) para q
 
 ## URL Base
 El servidor se levanta por defecto en `http://0.0.0.0:8000`.
+- **CORS**: Habilitado para todos los orígenes (`allow_origins=["*"]`, `allow_methods=["*"]`, `allow_headers=["*"]`). Un frontend corriendo en cualquier puerto/host (ej. Angular en `localhost:4200`) puede acceder directamente a los endpoints REST y WebSockets sin bloqueos.
 
 ---
 
@@ -24,11 +25,19 @@ Endpoint para **recibir** los datos analíticos de cada frame procesado. No env�
   ```json
   {
     "timestamp": 1696512345000,
+    "width": 640,
+    "height": 360,
+    "frame_size": {
+      "width": 640,
+      "height": 360
+    },
     "stats": {
       "count": 4, 
       "fps": 28,
       "latency": 35,
       "device": "CUDA",
+      "width": 640,
+      "height": 360,
       "hotspots": [
         { "rank": 1, "x": 320, "y": 240, "traffic": 150.5 },
         { "rank": 2, "x": 100, "y": 150, "traffic": 85.2 }
@@ -40,9 +49,10 @@ Endpoint para **recibir** los datos analíticos de cada frame procesado. No env�
     ]
   }
   ```
+  - `width` / `height` / `frame_size`: Tamaño exacto del fotograma procesado en píxeles. Permite al frontend escalar los puntos sin tener que adivinar o esperar a recibir el stream visual.
   - `stats.count`: Número de personas actualmente en cámara.
   - `stats.hotspots`: Top 3 zonas con más tránsito (basado en el histórico del vector field).
-  - `points`: Coordenadas en tiempo real de los peatones detectados.
+  - `points`: Coordenadas en tiempo real de los peatones detectados (`x`, `y` relativos a `width` y `height`).
 
 ### 3. Demo Visual (Imágenes renderizadas)
 `ws://<host>:8000/ws/v1/video/demo`

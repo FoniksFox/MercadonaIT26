@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, Set
@@ -13,6 +14,15 @@ import time
 from vision import VisionProcessor
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 processor = VisionProcessor()
@@ -69,8 +79,15 @@ async def processing_loop():
                 raw_img, heat_img, flow_img, pheat_img, stats, points = await asyncio.to_thread(processor.process_frame, frame)
                 
                 if heatmap_clients:
+                    h_frame, w_frame = raw_img.shape[:2]
                     heatmap_payload = json.dumps({
                         'timestamp': int(time.time() * 1000),
+                        'width': w_frame,
+                        'height': h_frame,
+                        'frame_size': {
+                            'width': w_frame,
+                            'height': h_frame
+                        },
                         'stats': stats,
                         'points': points
                     })

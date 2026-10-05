@@ -74,7 +74,15 @@ class VisionProcessor:
 
         if not self.config['processing_enabled']:
             latency = (time.time() - start_time) * 1000
-            stats = {'count': 0, 'fps': int(1000/max(latency, 1)), 'latency': int(latency), 'device': self.device, 'hotspots': []}
+            stats = {
+                'count': 0, 
+                'fps': int(1000/max(latency, 1)), 
+                'latency': int(latency), 
+                'device': self.device, 
+                'hotspots': [],
+                'width': target_w,
+                'height': target_h
+            }
             return frame_resized, None, None, None, stats, points
 
         if self.heatmap_canvas is None or self.heatmap_canvas.shape[:2] != (target_h, target_w):
@@ -297,7 +305,9 @@ class VisionProcessor:
             'fps': fps, 
             'latency': int(latency), 
             'device': self.device,
-            'hotspots': hotspots
+            'hotspots': hotspots,
+            'width': target_w,
+            'height': target_h
         }
 
         return frame_resized, colored_heatmap, flow_img, persistent_colored_heatmap, stats, points
