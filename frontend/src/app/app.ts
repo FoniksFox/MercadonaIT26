@@ -36,7 +36,7 @@ interface IndicatorBox {
   height: number;
 }
 
-const ANIMATION_MS = 420;
+const ANIMATION_MS = 280;
 
 /** Dashboard shell: sidebar with the views on the left, the current view on the right. */
 @Component({
@@ -91,7 +91,6 @@ export class App {
   private readonly nav = viewChild.required<ElementRef<HTMLElement>>('nav');
   private previousPath: string | null = null;
   private pageAnimationTimer?: ReturnType<typeof setTimeout>;
-  private indicatorFadeTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     effect(() => {
@@ -110,7 +109,6 @@ export class App {
     });
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.pageAnimationTimer);
-      clearTimeout(this.indicatorFadeTimer);
     });
   }
 
@@ -148,10 +146,9 @@ export class App {
     );
     this.isPageAnimating.set(false);
     clearTimeout(this.pageAnimationTimer);
-    clearTimeout(this.indicatorFadeTimer);
     this.indicatorFade.set(!sameGroup);
     if (!sameGroup) {
-      this.indicatorFadeTimer = setTimeout(() => this.indicatorFade.set(false), 220);
+      requestAnimationFrame(() => this.indicatorFade.set(false));
     }
 
     requestAnimationFrame(() => {

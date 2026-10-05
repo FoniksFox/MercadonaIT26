@@ -25,6 +25,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./settings/settings-general').then((m) => m.SettingsGeneral),
       },
+      {
+        path: 'test',
+        loadComponent: () =>
+          import('./settings/settings-test').then((m) => m.SettingsTest),
+        title: 'Pruebas · MercaTrack',
+      },
     ],
   },
   {

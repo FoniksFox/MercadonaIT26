@@ -1,4 +1,12 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { formatNumber } from '../core/format';
 import { seededRandom } from '../core/random';
 import { Supermarkets } from '../core/supermarkets';
@@ -40,6 +48,8 @@ export class Maps {
   protected readonly period = signal<MapPeriod>('live');
   protected readonly menuOpen = signal(false);
   protected readonly snapshot = signal<CrowdSnapshot | null>(null);
+  protected readonly isViewAnimating = signal(false);
+  private viewAnimationTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly heatGradient = HEAT_GRADIENT;
   protected readonly views: readonly { id: MapView; label: string; icon: IconName }[] = [
@@ -55,6 +65,10 @@ export class Maps {
   ] as const;
 
   private readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.viewAnimationTimer));
+  }
 
   protected readonly live = computed(() => this.period() === 'live');
   protected readonly viewLabel = computed(
@@ -143,6 +157,19 @@ export class Maps {
   protected choose(period: MapPeriod): void {
     this.period.set(period);
     this.menuOpen.set(false);
+  }
+
+  protected selectView(view: MapView): void {
+    if (view === this.view()) {
+      return;
+    }
+    this.view.set(view);
+    this.isViewAnimating.set(false);
+    clearTimeout(this.viewAnimationTimer);
+    requestAnimationFrame(() => {
+      this.isViewAnimating.set(true);
+      this.viewAnimationTimer = setTimeout(() => this.isViewAnimating.set(false), 220);
+    });
   }
 
   /** From live, "Histórico" shows today straight away and offers the other periods. */

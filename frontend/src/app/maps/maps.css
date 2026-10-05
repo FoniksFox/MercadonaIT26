@@ -21,3 +21,20 @@
   color: var(--on-accent);
   box-shadow: 0 4px 10px rgb(6 78 59 / 0.16);
 }
+
+.map-layout-content {
+  will-change: opacity;
+}
+
+.map-layout-fade {
+  animation: map-layout-fade 220ms ease-out;
+}
+
+@keyframes map-layout-fade {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}

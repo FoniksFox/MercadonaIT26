@@ -11,12 +11,14 @@ import { Supermarkets } from '../core/supermarkets';
   template: `
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="text-sm font-semibold tracking-[0.2em] text-accent uppercase">
+        <h1 class="page-title mt-2 text-4xl font-bold tracking-tight">{{ title() }}</h1>
+      </div>
+      <div class="flex items-end gap-6">
+        <div class="flex flex-wrap items-center gap-3"><ng-content /></div>
+        <p class="store-heading font-serif text-right text-3xl font-normal italic leading-tight text-accent">
           Mercadona {{ supermarket().name }}
         </p>
-        <h1 class="mt-2 text-4xl font-bold tracking-tight">{{ title() }}</h1>
       </div>
-      <div class="flex flex-wrap items-center gap-3"><ng-content /></div>
     </header>
   `,
 })
