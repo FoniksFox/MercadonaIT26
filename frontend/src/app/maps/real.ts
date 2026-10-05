@@ -12,7 +12,7 @@ import { BackendConnection, ChannelStatus } from '../core/backend-connection';
 import { BackendFrame, jpegSource } from '../core/backend-protocol';
 import { formatNumber } from '../core/format';
 import { ZoneId, ZONES, zonePercentages } from '../core/zones';
-import { paintFlow, paintPeople, paintWalkedFloor } from '../shared/heat/crowd-painting';
+import { paintFlow, paintPeople, paintShelves } from '../shared/heat/crowd-painting';
 import { FlowField } from '../shared/heat/flow-field';
 import { HeatField } from '../shared/heat/heat-field';
 import { HEAT_GRADIENT } from '../shared/heat/heat-ramp';
@@ -20,6 +20,7 @@ import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
 import { PLAN, ZONE_AREAS } from '../shared/heat/store-layout';
+import { REAL_SHELVES } from './real-layout';
 
 type RealView = 'heatmap' | 'flow' | 'occupancy';
 
