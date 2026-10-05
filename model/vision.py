@@ -15,7 +15,7 @@ class VisionProcessor:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(f"\n--- Usando dispositivo: {self.device.upper()} ---")
         
-        self.model = YOLO('yolov8n.pt')
+        self.model = YOLO('yolov8s.pt')
         self.model.to(self.device)
         
         self.heatmap_canvas = None
@@ -40,7 +40,7 @@ class VisionProcessor:
             'radius': 31,
             'decay': 0.85,
             'flow_decay': 0.90,
-            'confidence': 0.4,
+            'confidence': 0.15,
             'resolution': 640
         }
 
@@ -127,10 +127,15 @@ class VisionProcessor:
                 aspect_ratio = h_box / w_box
 
                 # Detección de persona incompleta / clipeada por los bordes
-                # Si toca el borde inferior del encuadre y no tiene la proporción completa de una persona (ratio < 1.85),
-                # significa que sus pies aún no han entrado en el plano (o ya han salido).
-                is_bottom_clipped = (y2 >= target_h - 4) and (aspect_ratio < 1.85)
-                is_side_clipped = (x1 <= 3 or x2 >= target_w - 3) and (w_box < 25)
+                # En vista cenital o modo estabilidad, la persona vista desde arriba es casi circular o cuadrada (aspect_ratio ~ 1.0).
+                # Solo se considera recortada si el cuerpo toca el borde extremo con dimensiones mínimas.
+                if self.config.get('stability_mode', True):
+                    is_bottom_clipped = (y2 >= target_h - 2) and (h_box < 15)
+                    is_side_clipped = (x1 <= 2 or x2 >= target_w - 2) and (w_box < 15)
+                else:
+                    # Modo clásico cámara lateral (requiere ver la silueta vertical completa de la persona)
+                    is_bottom_clipped = (y2 >= target_h - 4) and (aspect_ratio < 1.85)
+                    is_side_clipped = (x1 <= 3 or x2 >= target_w - 3) and (w_box < 25)
                 is_clipped = is_bottom_clipped or is_side_clipped
 
                 # Posición según modo de estabilidad

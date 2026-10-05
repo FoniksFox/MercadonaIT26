@@ -91,7 +91,7 @@ Devuelve el estado completo de la configuración del motor de IA.
     "radius": 31,
     "decay": 0.85,
     "flow_decay": 0.90,
-    "confidence": 0.4,
+    "confidence": 0.25,
     "resolution": 640,
     "stability_mode": true
   }
