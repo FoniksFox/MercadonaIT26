@@ -19,7 +19,7 @@ import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
 import { StatTile } from '../shared/stat-tile';
 import { LiveSnapshot, LiveStaffing } from './live-staffing';
-import { Coverage, OPEN_TILLS, TOTAL_TILLS } from './staffing';
+import { Coverage, OPEN_TILLS, TOTAL_TILLS, recommendedStaff } from './staffing';
 import { HistoryRange, buildStaffingHistory } from './staffing-history';
 
 type ManagementRange = 'live' | HistoryRange;
@@ -29,6 +29,8 @@ const COVERAGE: Record<Coverage, { label: string; icon: IconName; color: string 
   tight: { label: 'Al límite', icon: 'alert', color: 'text-brand-orange' },
   short: { label: 'Falta personal', icon: 'alert', color: 'text-brand-red' },
 };
+
+type StaffAdjustment = 'add' | 'remove' | 'none';
 
 /** How often the live store moves forward, and how often the screen is refreshed. */
 const TICK_MS = 250;
@@ -68,7 +70,18 @@ export class Management {
   protected readonly now = signal<LiveSnapshot | null>(null);
 
   protected readonly liveRows = computed(() =>
-    (this.now()?.zones ?? []).map((row) => ({ ...row, status: COVERAGE[row.coverage] })),
+    (this.now()?.zones ?? []).map((row) => {
+      const target = recommendedStaff(row.zone.id, row.customers);
+      const adjustment: StaffAdjustment =
+        row.coverage === 'short' ? 'add' : row.staff > target ? 'remove' : 'none';
+      const amount =
+        adjustment === 'add'
+          ? row.missing
+          : adjustment === 'remove'
+            ? row.staff - target
+            : 0;
+      return { ...row, status: COVERAGE[row.coverage], adjustment, amount };
+    }),
   );
 
   protected readonly events = computed(() =>

@@ -7,7 +7,7 @@
     <li>
       <button
         type="button"
-        class="flex w-full items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition-colors"
+        class="relative flex w-full items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition-colors"
         [class]="current ? 'border-accent' : 'border-line hover:border-ink-3'"
         [disabled]="current"
         (click)="ask(store)"
@@ -20,10 +20,11 @@
           <span class="block text-sm text-ink-2">{{ store.city }} · 9:00 – 21:30</span>
         </span>
         @if (current) {
-          <span class="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-accent">
-            <app-icon name="check" class="size-5" />
-            Tienda actual
-          </span>
+          <app-icon
+            name="check"
+            class="absolute right-5 bottom-5 size-5 text-accent"
+            aria-label="Tienda actual"
+          />
         }
       </button>
     </li>

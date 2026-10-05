@@ -58,6 +58,11 @@ export function assess(zone: ZoneId, customers: number, staff: number): StaffNee
   return { coverage: 'short', load, missing: Math.max(1, needed - staff) };
 }
 
+/** Smallest useful team for the current customer load, keeping one person per zone. */
+export function recommendedStaff(zone: ZoneId, customers: number): number {
+  return Math.max(1, Math.ceil(customers / CAPACITY[kindOf(zone)]));
+}
+
 /** "1 persona", "2 personas", "1 caja", "2 cajas". */
 export function staffUnits(zone: ZoneId, count: number): string {
   const unit = zone === 'checkout' ? 'caja' : 'persona';

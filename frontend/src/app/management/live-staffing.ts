@@ -12,6 +12,8 @@ export interface LiveZone {
   customers: number;
   staff: number;
   coverage: Coverage;
+  /** People (or tills) missing to cover the current demand. */
+  missing: number;
   /** What to do about it; `null` when nothing is needed. */
   action: string | null;
 }
@@ -98,6 +100,7 @@ export class LiveStaffing {
         customers: Math.round(this.smoothed[zone.id]),
         staff,
         coverage: short ? 'short' : need.coverage,
+        missing: short ? Math.max(1, need.missing) : 0,
         action,
       };
     });

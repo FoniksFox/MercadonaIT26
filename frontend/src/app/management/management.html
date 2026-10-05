@@ -55,10 +55,10 @@
                 <thead>
                   <tr class="border-b border-line text-left text-ink-2">
                     <th scope="col" class="px-2 py-2 font-medium">Zona</th>
-                    <th scope="col" class="px-2 py-2 text-right font-medium">Clientes</th>
-                    <th scope="col" class="px-2 py-2 text-right font-medium">Personal</th>
-                    <th scope="col" class="px-2 py-2 pl-8 font-medium">Estado</th>
-                    <th scope="col" class="px-2 py-2 font-medium">Acción sugerida</th>
+                    <th scope="col" class="px-2 py-2 text-center font-medium">Clientes</th>
+                    <th scope="col" class="px-2 py-2 text-center font-medium">Personal</th>
+                    <th scope="col" class="px-2 py-2 text-center font-medium">Estado</th>
+                    <th scope="col" class="px-2 py-2 text-right font-medium">Acción sugerida</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -70,10 +70,10 @@
                           {{ row.zone.name }}
                         </span>
                       </th>
-                      <td class="px-2 py-3 text-right tabular-nums">{{ row.customers }}</td>
-                      <td class="px-2 py-3 text-right tabular-nums">{{ row.staff }}</td>
-                      <td class="px-2 py-3 pl-8 whitespace-nowrap">
-                        <span class="flex items-center gap-2">
+                      <td class="px-2 py-3 text-center tabular-nums">{{ row.customers }}</td>
+                      <td class="px-2 py-3 text-center tabular-nums">{{ row.staff }}</td>
+                      <td class="px-2 py-3 text-center whitespace-nowrap">
+                        <span class="flex items-center justify-center gap-2">
                           <app-icon
                             [name]="row.status.icon"
                             class="size-5"
@@ -85,11 +85,35 @@
                         </span>
                       </td>
                       <td
-                        class="px-2 py-3 whitespace-nowrap"
-                        [class.text-ink-3]="!row.action"
-                        [class.font-semibold]="row.coverage === 'short'"
+                        class="px-2 py-3 text-center whitespace-nowrap"
+                        [attr.aria-label]="
+                          row.adjustment === 'add'
+                            ? 'Añadir ' + row.amount + ' persona' + (row.amount === 1 ? '' : 's')
+                            : row.adjustment === 'remove'
+                              ? 'Retirar ' + row.amount + ' persona' + (row.amount === 1 ? '' : 's')
+                              : 'Sin cambios'
+                        "
                       >
-                        {{ row.action ?? '–' }}
+                        <span class="flex items-center justify-center gap-2">
+                          <app-icon name="person" class="size-5 text-ink-3" />
+                          @switch (row.adjustment) {
+                            @case ('add') {
+                              <span class="flex items-center gap-1 font-semibold text-brand-red">
+                                <app-icon name="arrow-up" class="size-4" />
+                                {{ row.amount }}
+                              </span>
+                            }
+                            @case ('remove') {
+                              <span class="flex items-center gap-1 font-semibold text-blue-600">
+                                <app-icon name="arrow-down" class="size-4" />
+                                {{ row.amount }}
+                              </span>
+                            }
+                            @default {
+                              <span class="font-semibold text-purple-600">−</span>
+                            }
+                          }
+                        </span>
                       </td>
                     </tr>
                   }
