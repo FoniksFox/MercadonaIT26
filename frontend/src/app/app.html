@@ -1,76 +1,125 @@
-<main class="flex min-h-screen bg-slate-950 text-slate-100">
-  <aside class="flex w-64 shrink-0 flex-col bg-emerald-700 px-4 py-6 shadow-xl">
-    <div class="px-3">
-      <p class="text-2xl font-bold tracking-tight">MercaFlow</p>
-      <p class="mt-1 text-sm text-emerald-100">La tienda que entiende su movimiento</p>
+<main class="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+  <aside class="flex w-72 shrink-0 flex-col bg-emerald-800 px-4 py-6 shadow-xl">
+    <div class="rounded-2xl bg-emerald-700 p-5 text-white shadow-inner">
+      <p class="text-3xl font-extrabold tracking-tight">MercaTrack</p>
+      <p class="mt-2 text-sm leading-5 text-emerald-50">La tienda que entiende su movimiento</p>
     </div>
 
-    <nav class="mt-10 flex flex-col gap-3" aria-label="Navegación principal">
-      <button
-        type="button"
-        (click)="selectTab('maps')"
-        [attr.aria-current]="activeTab() === 'maps' ? 'page' : null"
-        class="flex min-h-16 items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold transition-colors hover:bg-emerald-500"
-        [class.bg-emerald-500]="activeTab() === 'maps'"
-        [class.shadow-md]="activeTab() === 'maps'"
-      >
-        <svg aria-hidden="true" class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m9 20 6-3 6 3V4l-6-3-6 3-6-3v16l6 3Z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 4v16M15 1v16" />
-        </svg>
-        <span>Mapas</span>
-      </button>
-
-      <button
-        type="button"
-        (click)="selectTab('staff')"
-        [attr.aria-current]="activeTab() === 'staff' ? 'page' : null"
-        class="flex min-h-16 items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold transition-colors hover:bg-emerald-500"
-        [class.bg-emerald-500]="activeTab() === 'staff'"
-        [class.shadow-md]="activeTab() === 'staff'"
-      >
-        <svg aria-hidden="true" class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-        <span>Staff</span>
-      </button>
+    <nav
+      class="relative mt-8 flex min-h-0 flex-1 flex-col rounded-2xl bg-emerald-700/90 p-3 shadow-inner"
+      [class.active-maps]="activeTab() === 'maps'"
+      [class.active-staff]="activeTab() === 'staff'"
+      [class.active-settings]="activeTab() === 'settings'"
+      [class.is-indicator-animating]="isAnimating()"
+      aria-label="Navegación principal"
+    >
+      <div class="tab-active-indicator" aria-hidden="true"></div>
+      <div class="flex flex-col gap-3">
+        <button type="button" (click)="selectTab('maps')" [attr.aria-current]="activeTab() === 'maps' ? 'page' : null" class="relative z-10 flex min-h-16 w-full items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold text-white transition-colors hover:bg-emerald-500/30">
+          <svg aria-hidden="true" class="size-7 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m9 20 6-3 6 3V4l-6-3-6 3v16l6 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 4v16M15 1v16" />
+          </svg>
+          <span>Mapas</span>
+        </button>
+        <button type="button" (click)="selectTab('staff')" [attr.aria-current]="activeTab() === 'staff' ? 'page' : null" class="relative z-10 flex min-h-16 w-full items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold text-white transition-colors hover:bg-emerald-500/30">
+          <svg aria-hidden="true" class="size-7 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Staff</span>
+        </button>
+      </div>
+      <div class="mt-auto border-t border-emerald-500/50 pt-3">
+        <button type="button" (click)="selectTab('settings')" [attr.aria-current]="activeTab() === 'settings' ? 'page' : null" class="relative z-10 flex min-h-16 w-full items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold text-white transition-colors hover:bg-emerald-500/30">
+          <svg aria-hidden="true" class="size-7 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <g transform="translate(4 4)"><path stroke-linecap="round" stroke-linejoin="round" d="M10.33 4.32 9.7 2.8a1 1 0 0 0-.93-.62H7.17a1 1 0 0 0-.93.62l-.63 1.52a1 1 0 0 1-.52.52l-1.52.63a1 1 0 0 0-.62.93v1.6a1 1 0 0 0 .62.93l1.52.63c.23.1.42.29.52.52l.63 1.52a1 1 0 0 0 .93.62h1.6a1 1 0 0 0 .93-.62l.63-1.52a1 1 0 0 1 .52-.52l1.52-.63a1 1 0 0 0 .62-.93V6.4a1 1 0 0 0-.62-.93l-1.52-.63a1 1 0 0 1-.52-.52Z" /><circle cx="8.12" cy="7.2" r="2.25" /></g>
+          </svg>
+          <span>Configuración</span>
+        </button>
+      </div>
     </nav>
   </aside>
 
-  <section class="min-w-0 flex-1">
+  <section class="min-w-0 flex-1 overflow-hidden" [class.content-slide-down]="isAnimating() && navigationDirection() === 'down'" [class.content-slide-up]="isAnimating() && navigationDirection() === 'up'">
     @if (activeTab() === 'maps') {
-      <div class="mx-auto flex max-w-5xl flex-col items-center px-6 py-16 text-center">
-        <h1 class="text-5xl font-bold tracking-tight">{{ title() }}</h1>
-        <p class="mt-4 text-lg text-slate-400">La tienda que entiende su propio movimiento</p>
-
-        <div class="mt-12 grid w-full gap-6 sm:grid-cols-2">
-          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 class="text-xl font-semibold">Heatmap</h2>
-            <p class="mt-2 text-sm text-slate-400">Where people move and stand over time.</p>
-          </section>
-          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 class="text-xl font-semibold">Vector field</h2>
-            <p class="mt-2 text-sm text-slate-400">Direction and magnitude of movement.</p>
-          </section>
+      <div class="mx-auto max-w-6xl px-6 py-10">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">Análisis de tienda</p>
+            <h1 class="mt-2 text-4xl font-bold tracking-tight">Mapas</h1>
+            <p class="mt-2 text-slate-500">Explora el movimiento sobre el mismo layout del supermercado.</p>
+          </div>
+          <button type="button" class="rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-500">Subir vídeo</button>
         </div>
 
-        <button
-          type="button"
-          class="mt-12 rounded-xl bg-emerald-500 px-8 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
-        >
-          Upload a video
-        </button>
+        <div class="mt-8 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" role="tablist" aria-label="Vistas del mapa">
+          <button type="button" role="tab" [attr.aria-selected]="activeMapView() === 'heatmap'" (click)="selectMapView('heatmap')" class="map-view-tab" [class.map-view-tab-active]="activeMapView() === 'heatmap'">Mapa de calor</button>
+          <button type="button" role="tab" [attr.aria-selected]="activeMapView() === 'flow'" (click)="selectMapView('flow')" class="map-view-tab" [class.map-view-tab-active]="activeMapView() === 'flow'">Mapa de flujo</button>
+          <button type="button" role="tab" [attr.aria-selected]="activeMapView() === 'occupancy'" (click)="selectMapView('occupancy')" class="map-view-tab" [class.map-view-tab-active]="activeMapView() === 'occupancy'">Ocupación</button>
+        </div>
+
+        <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_240px]">
+          <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="mb-4 flex items-center justify-between">
+              <div>
+                <h2 class="font-semibold">Supermercado · Layout principal</h2>
+                <p class="text-sm text-slate-500">Datos de movimiento · Últimas 24 horas</p>
+              </div>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">EN DIRECTO</span>
+            </div>
+
+            <div class="map-canvas">
+              <svg class="h-auto w-full" viewBox="0 0 900 520" role="img" aria-label="Layout del supermercado con paredes, secciones y datos de movimiento">
+                <defs>
+                  <filter id="blur"><feGaussianBlur stdDeviation="28" /></filter>
+                  <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#047857" /></marker>
+                </defs>
+                <rect width="900" height="520" rx="16" fill="#f8fafc" />
+                <g stroke="#cbd5e1" stroke-width="5" fill="#fff">
+                  <rect x="35" y="35" width="830" height="450" rx="8" />
+                  <rect x="70" y="90" width="170" height="100" /><rect x="270" y="90" width="170" height="100" />
+                  <rect x="470" y="90" width="170" height="100" /><rect x="670" y="90" width="160" height="100" />
+                  <rect x="70" y="230" width="170" height="100" /><rect x="270" y="230" width="170" height="100" />
+                  <rect x="470" y="230" width="170" height="100" /><rect x="670" y="230" width="160" height="100" />
+                  <rect x="70" y="370" width="260" height="70" /><rect x="360" y="370" width="220" height="70" /><rect x="610" y="370" width="220" height="70" />
+                </g>
+                @if (activeMapView() === 'heatmap') {
+                  <g filter="url(#blur)" opacity=".72">
+                    <circle cx="205" cy="245" r="76" fill="#f97316" /><circle cx="520" cy="170" r="70" fill="#ef4444" /><circle cx="700" cy="315" r="82" fill="#facc15" /><circle cx="390" cy="400" r="65" fill="#22c55e" />
+                  </g>
+                  <g fill="#475569" font-size="16" font-weight="600"><text x="122" y="145">Frescos</text><text x="325" y="145">Fruta y verdura</text><text x="520" y="145">Lácteos</text><text x="715" y="145">Bebidas</text><text x="115" y="285">Higiene</text><text x="325" y="285">Despensa</text><text x="520" y="285">Congelados</text><text x="705" y="285">Panadería</text></g>
+                } @else if (activeMapView() === 'flow') {
+                  <g fill="none" stroke="#047857" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow)"><path d="M110 410 C180 380 180 270 210 200" /><path d="M260 410 C330 360 350 250 350 120" /><path d="M450 410 C520 350 540 270 550 120" /><path d="M680 410 C720 360 760 300 750 210" /><path d="M760 210 C700 180 630 210 590 260" /></g>
+                  <g fill="#065f46" font-size="16" font-weight="600"><text x="95" y="465">Entrada</text><text x="755" y="465">Salida</text></g>
+                } @else {
+                  <g fill="#10b981" opacity=".75"><rect x="70" y="90" width="170" height="100" /><rect x="470" y="90" width="170" height="100" /><rect x="670" y="230" width="160" height="100" /><rect x="360" y="370" width="220" height="70" /></g>
+                  <g fill="#334155" font-size="18" font-weight="700"><text x="135" y="145">78%</text><text x="535" y="145">64%</text><text x="725" y="285">52%</text><text x="445" y="412">81%</text></g>
+                }
+                <g fill="#fff" stroke="#334155" stroke-width="2"><circle cx="205" cy="245" r="6" /><circle cx="520" cy="170" r="6" /><circle cx="700" cy="315" r="6" /></g>
+              </svg>
+            </div>
+          </section>
+
+          <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 class="font-semibold">Leyenda</h2>
+            @if (activeMapView() === 'heatmap') {
+              <p class="mt-2 text-sm text-slate-500">Concentración de personas</p>
+              <div class="mt-5 h-3 rounded-full bg-gradient-to-r from-emerald-400 via-yellow-300 to-red-500"></div>
+              <div class="mt-1 flex justify-between text-xs text-slate-500"><span>Baja</span><span>Alta</span></div>
+            } @else if (activeMapView() === 'flow') {
+              <p class="mt-2 text-sm text-slate-500">Dirección y magnitud del movimiento</p>
+              <div class="mt-6 flex items-center gap-3 text-emerald-700"><span class="text-2xl">→</span><span class="text-sm">Flujo predominante</span></div>
+            } @else {
+              <p class="mt-2 text-sm text-slate-500">Porcentaje de ocupación por sección</p>
+              <div class="mt-5 space-y-3 text-sm"><div><div class="flex justify-between"><span>Frescos</span><b>78%</b></div><div class="mt-1 h-2 rounded-full bg-emerald-500"></div></div><div><div class="flex justify-between"><span>Despensa</span><b>81%</b></div><div class="mt-1 h-2 rounded-full bg-emerald-600"></div></div></div>
+            }
+            <div class="mt-8 border-t border-slate-100 pt-5 text-sm text-slate-500"><p><b class="text-slate-700">Plano:</b> Layout principal</p><p class="mt-2"><b class="text-slate-700">Escala:</b> 1 unidad = 1 metro</p></div>
+          </aside>
+        </div>
       </div>
+    } @else if (activeTab() === 'staff') {
+      <div class="mx-auto max-w-5xl px-6 py-16"><h1 class="text-4xl font-bold tracking-tight">Staff</h1><p class="mt-3 text-lg text-slate-500">Consulta la distribución y el movimiento del personal de la tienda.</p><div class="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 shadow-sm">Los datos del personal aparecerán aquí cuando haya un análisis disponible.</div></div>
     } @else {
-      <div class="mx-auto max-w-5xl px-6 py-16">
-        <h1 class="text-4xl font-bold tracking-tight">Staff</h1>
-        <p class="mt-3 text-lg text-slate-400">
-          Consulta la distribución y el movimiento del personal de la tienda.
-        </p>
-        <div class="mt-10 rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 p-12 text-center text-slate-400">
-          Los datos del personal aparecerán aquí cuando haya un análisis disponible.
-        </div>
-      </div>
+      <div class="mx-auto max-w-5xl px-6 py-16"><h1 class="text-4xl font-bold tracking-tight">Configuración</h1><p class="mt-3 text-lg text-slate-500">Ajusta las preferencias de MercaTrack y del análisis de la tienda.</p><div class="mt-10 rounded-2xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">Las opciones de configuración estarán disponibles cuando se conecte el backend.</div></div>
     }
   </section>
 </main>
