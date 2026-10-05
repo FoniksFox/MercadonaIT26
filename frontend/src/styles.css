@@ -11,7 +11,7 @@ html {
   --font-sans: "Montserrat", "Aptos", "Segoe UI", sans-serif;
 
   /* Brand palette (see colors.txt). */
-  --color-brand-green: #149e6e;
+  --color-brand-green: #00894e;
   --color-brand-yellow-green: #bfd148;
   --color-brand-orange: #ffa100;
   --color-brand-red: #e33a2f;
@@ -44,17 +44,26 @@ html {
   --ink: #13201a;
   --ink-2: #45564c;
   --ink-3: #6b7a71;
-  /* Brand green stepped down so white text on it clears 4.5:1. */
-  --accent: #0e7c56;
+  /*
+   * The one green of the app: Mercadona's dark green, taken from the
+   * stylesheets of mercadona.es and tienda.mercadona.es (their
+   * --cucumber-black-20; their lighter button green is #00ab61). Every green
+   * surface, text or mark uses exactly this value, in both themes; do not add
+   * lighter or darker greens next to it.
+   */
+  --green: #00894e;
+  --accent: var(--green);
   --on-accent: #ffffff;
-  --sidebar: #0a5c40;
-  --sidebar-panel: #0e7c56;
-  --sidebar-indicator: #12936a;
+  --sidebar: var(--green);
+  --sidebar-panel: var(--green);
+  /* The active entry is marked with a white veil over that same green. */
+  --sidebar-indicator: rgb(255 255 255 / 0.22);
   /* Charts. */
-  --series: #149e6e;
+  --series: var(--green);
   --grid: #e3e9e3;
-  --seq-low: #e4f3ec;
-  --seq-high: #0b5c40;
+  /* A scale needs steps: they are that green thinned over the surface, up to the full green. */
+  --seq-low: color-mix(in srgb, var(--green) 12%, var(--surface));
+  --seq-high: var(--green);
   /* Store floor plan. */
   --plan-floor: #fbfcfa;
   --plan-wall: #aebbb2;
@@ -70,15 +79,7 @@ html {
   --ink: #f0f5f2;
   --ink-2: #b7c4bc;
   --ink-3: #8a988f;
-  --accent: #1aa877;
-  --on-accent: #06140e;
-  --sidebar: #063a2b;
-  --sidebar-panel: #07513b;
-  --sidebar-indicator: #0b7654;
-  --series: #1aa877;
   --grid: #24312b;
-  --seq-low: #1b2621;
-  --seq-high: #3fd49b;
   --plan-floor: #121a16;
   --plan-wall: #3c4d45;
   --plan-fixture: #25332c;
@@ -130,7 +131,7 @@ html {
   z-index: 0;
   border-radius: 0.75rem;
   background: var(--sidebar-indicator);
-  box-shadow: 0 8px 16px rgb(6 78 59 / 0.2);
+  box-shadow: 0 8px 16px rgb(0 0 0 / 0.12);
   opacity: 1;
   will-change: top, left, width, height;
   transition:

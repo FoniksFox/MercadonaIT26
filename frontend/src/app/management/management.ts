@@ -1,14 +1,7 @@
-import {
-  Component,
-  DestroyRef,
-  afterNextRender,
-  computed,
-  effect,
-  inject,
-  signal,
-  untracked,
-} from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { formatNumber } from '../core/format';
+import { Coverage, OPEN_TILLS, TOTAL_TILLS, recommendedStaff } from '../core/staffing';
+import { StoreSimulation } from '../core/store-simulation';
 import { Supermarkets } from '../core/supermarkets';
 import { BarChart, BarRow } from '../shared/charts/bar-chart';
 import { ChartCard } from '../shared/charts/chart-card';
@@ -18,8 +11,6 @@ import { Icon } from '../shared/icon';
 import { IconName } from '../shared/icons';
 import { PageHeader } from '../shared/page-header';
 import { StatTile } from '../shared/stat-tile';
-import { LiveSnapshot, LiveStaffing } from './live-staffing';
-import { Coverage, OPEN_TILLS, TOTAL_TILLS, recommendedStaff } from './staffing';
 import { HistoryRange, buildStaffingHistory } from './staffing-history';
 
 type ManagementRange = 'live' | HistoryRange;
@@ -32,10 +23,6 @@ const COVERAGE: Record<Coverage, { label: string; icon: IconName; color: string 
 
 type StaffAdjustment = 'add' | 'remove' | 'none';
 
-/** How often the live store moves forward, and how often the screen is refreshed. */
-const TICK_MS = 250;
-const TICKS_PER_REFRESH = 4;
-
 const CLOCK = new Intl.DateTimeFormat('es-ES', {
   hour: '2-digit',
   minute: '2-digit',
@@ -44,8 +31,9 @@ const CLOCK = new Intl.DateTimeFormat('es-ES', {
 
 /**
  * Staff against customers. Live: each zone right now, with what to do about
- * it and the alerts as they happen. Past periods: where and when staff fell
- * short, and what to change in the rota.
+ * it and the alerts as they happen, read from the same simulation the map
+ * shows (restart it there and this starts over too). Past periods: where and
+ * when staff fell short, and what to change in the rota.
  */
 @Component({
   selector: 'app-management',
@@ -67,29 +55,26 @@ export class Management {
 
   // ---------- Live ----------
 
-  protected readonly now = signal<LiveSnapshot | null>(null);
+  /** The store right now, from the app-wide simulation. */
+  protected readonly now = inject(StoreSimulation).staffing;
 
   protected readonly liveRows = computed(() =>
-    (this.now()?.zones ?? []).map((row) => {
+    this.now().zones.map((row) => {
       const target = recommendedStaff(row.zone.id, row.customers);
       const adjustment: StaffAdjustment =
         row.coverage === 'short' ? 'add' : row.staff > target ? 'remove' : 'none';
       const amount =
-        adjustment === 'add'
-          ? row.missing
-          : adjustment === 'remove'
-            ? row.staff - target
-            : 0;
+        adjustment === 'add' ? row.missing : adjustment === 'remove' ? row.staff - target : 0;
       return { ...row, status: COVERAGE[row.coverage], adjustment, amount };
     }),
   );
 
   protected readonly events = computed(() =>
-    (this.now()?.events ?? []).map((event) => ({ ...event, time: CLOCK.format(event.at) })),
+    this.now().events.map((event) => ({ ...event, time: CLOCK.format(event.at) })),
   );
 
   protected readonly tillWait = computed(() => {
-    const minutes = this.now()?.tillWaitMinutes ?? 0;
+    const minutes = this.now().tillWaitMinutes;
     return minutes < 0.5 ? 'Sin espera' : `${formatNumber(minutes)} min`;
   });
 
@@ -120,34 +105,4 @@ export class Management {
   );
   /** Whether anything was missing at all: an all-zero grid says nothing. */
   protected readonly anyShortage = computed(() => (this.past()?.shortHours ?? 0) > 0);
-
-  private readonly destroyRef = inject(DestroyRef);
-  private staffing: LiveStaffing | null = null;
-  private ticks = 0;
-
-  constructor() {
-    effect(() => {
-      const store = this.supermarket();
-      untracked(() => {
-        this.staffing = new LiveStaffing(store);
-        this.now.set(this.staffing.snapshot());
-      });
-    });
-    afterNextRender(() => {
-      // The store keeps running behind the other periods, so "En vivo" is current on return.
-      const timer = setInterval(() => this.tick(), TICK_MS);
-      this.destroyRef.onDestroy(() => clearInterval(timer));
-    });
-  }
-
-  private tick(): void {
-    if (!this.staffing) {
-      return;
-    }
-    this.staffing.advance(TICK_MS / 1000);
-    this.ticks += 1;
-    if (this.ticks % TICKS_PER_REFRESH === 0) {
-      this.now.set(this.staffing.snapshot());
-    }
-  }
 }

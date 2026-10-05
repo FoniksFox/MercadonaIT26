@@ -34,6 +34,11 @@ const RETRY_MS = 1500;
 const SAMPLE_EVERY_MS = 500;
 /** Without messages for this long, an open channel counts as silent. */
 const SILENT_AFTER_MS = 2000;
+/** Frames waiting to leave above which new ones are dropped instead of queued. */
+const MAX_QUEUED_BYTES = 1_000_000;
+
+/** State of the channel that sends video to the model. */
+export type StreamStatus = 'off' | 'connecting' | 'open' | 'retrying';
 
 type Channel = 'data' | 'images';
 
@@ -53,6 +58,8 @@ export class BackendConnection {
 
   readonly dataStatus = signal<ChannelStatus>('off');
   readonly imageStatus = signal<ChannelStatus>('off');
+  /** Only used when connecting with `sendVideo`: the channel to feed the model. */
+  readonly streamStatus = signal<StreamStatus>('off');
 
   /** Latest data message. Updated at most once per animation frame. */
   readonly frame = signal<BackendFrame | null>(null);
@@ -74,6 +81,9 @@ export class BackendConnection {
   onFrame: ((frame: BackendFrame) => void) | null = null;
 
   private urls: { http: string; ws: string } | null = null;
+  private stream: WebSocket | null = null;
+  private streamRetry?: ReturnType<typeof setTimeout>;
+  private sendsVideo = false;
   private readonly sockets: Partial<Record<Channel, WebSocket>> = {};
   private readonly retries: Partial<Record<Channel, ReturnType<typeof setTimeout>>> = {};
   private counts: ReceivedCounts = { data: 0, images: 0, invalid: 0 };
@@ -100,8 +110,11 @@ export class BackendConnection {
     });
   }
 
-  /** Connects to `address` (or to the current one) and keeps the channels open. */
-  connect(address = this.address()): void {
+  /**
+   * Connects to `address` (or to the current one) and keeps the channels open.
+   * With `sendVideo`, it also opens the channel to feed the model with frames.
+   */
+  connect(address = this.address(), options: { sendVideo?: boolean } = {}): void {
     const urls = backendUrls(address);
     if (!urls) {
       this.addressError.set('Escribe la dirección del backend, por ejemplo 192.168.1.50:8000');
@@ -117,13 +130,17 @@ export class BackendConnection {
     this.connected.set(true);
     this.open('data');
     this.open('images');
+    this.sendsVideo = options.sendVideo ?? false;
+    if (this.sendsVideo) {
+      this.openStream();
+    }
     void this.loadConfig();
   }
 
   /** Connects straight away when an address was used before on this device. */
-  connectIfRemembered(): void {
+  connectIfRemembered(options: { sendVideo?: boolean } = {}): void {
     if (readStored(ADDRESS_KEY)) {
-      this.connect();
+      this.connect(this.address(), options);
     }
   }
 
@@ -139,8 +156,41 @@ export class BackendConnection {
       }
       this.status(channel).set('off');
     }
+    clearTimeout(this.streamRetry);
+    if (this.stream) {
+      this.stream.onclose = null;
+      this.stream.close();
+      this.stream = null;
+    }
+    this.streamStatus.set('off');
     cancelAnimationFrame(this.flushId);
     this.flushId = 0;
+  }
+
+  /**
+   * Sends one JPEG frame to the model (`/ws/v1/stream`). Returns false when it
+   * was not sent: the channel is not open, or earlier frames are still waiting.
+   */
+  sendFrame(jpeg: Blob): boolean {
+    const socket = this.stream;
+    if (
+      !socket ||
+      socket.readyState !== WebSocket.OPEN ||
+      socket.bufferedAmount > MAX_QUEUED_BYTES
+    ) {
+      return false;
+    }
+    socket.send(jpeg);
+    return true;
+  }
+
+  /** `PATCH /api/v1/config`: changes some settings of the model while it runs. */
+  async updateConfig(changes: BackendConfig): Promise<boolean> {
+    const config = await this.request('PATCH', '/api/v1/config', changes);
+    if (config) {
+      this.config.set(config as BackendConfig);
+    }
+    return config !== null;
   }
 
   /** `GET /api/v1/config`. */
@@ -154,6 +204,30 @@ export class BackendConnection {
   /** `POST /api/v1/heatmap/clear`: empties the maps the backend keeps. */
   async clearMaps(): Promise<boolean> {
     return (await this.request('POST', '/api/v1/heatmap/clear')) !== null;
+  }
+
+  private openStream(): void {
+    if (!this.urls) {
+      return;
+    }
+    if (this.streamStatus() !== 'retrying') {
+      this.streamStatus.set('connecting');
+    }
+    const retry = () => {
+      this.stream = null;
+      if (this.connected() && this.sendsVideo) {
+        this.streamStatus.set('retrying');
+        this.streamRetry = setTimeout(() => this.openStream(), RETRY_MS);
+      }
+    };
+    try {
+      const socket = new WebSocket(this.urls.ws + '/ws/v1/stream');
+      this.stream = socket;
+      socket.onopen = () => this.streamStatus.set('open');
+      socket.onclose = retry;
+    } catch {
+      retry();
+    }
   }
 
   private status(channel: Channel) {
@@ -256,12 +330,21 @@ export class BackendConnection {
     }
   }
 
-  private async request(method: 'GET' | 'POST', path: string): Promise<unknown> {
+  private async request(
+    method: 'GET' | 'POST' | 'PATCH',
+    path: string,
+    body?: unknown,
+  ): Promise<unknown> {
     if (!this.urls) {
       return null;
     }
     try {
-      const response = await fetch(this.urls.http + path, { method });
+      const response = await fetch(this.urls.http + path, {
+        method,
+        ...(body === undefined
+          ? {}
+          : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      });
       if (!response.ok) {
         this.httpError.set(`El backend respondió ${response.status} a ${method} ${path}.`);
         return null;

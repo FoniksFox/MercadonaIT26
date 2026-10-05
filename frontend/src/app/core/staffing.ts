@@ -1,4 +1,4 @@
-import { ZoneId } from '../core/zones';
+import { ZoneId } from './zones';
 
 // How staff is matched against customers. Placeholder rules, shared by the
 // live view and the history, until the backend provides the real ones.

@@ -151,7 +151,9 @@
                 <button
                   type="button"
                   class="rounded-lg px-3 py-2 tabular-nums transition-colors"
-                  [class]="speed() === option ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
+                  [class]="
+                    speed() === option ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'
+                  "
                   [attr.aria-pressed]="speed() === option"
                   [attr.aria-label]="'Velocidad por ' + option"
                   (click)="speed.set(option)"
@@ -164,7 +166,7 @@
             <button
               type="button"
               class="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-sunken"
-              (click)="restarts.set(restarts() + 1)"
+              (click)="restart()"
             >
               <app-icon name="restart" class="size-4" />
               Reiniciar simulación

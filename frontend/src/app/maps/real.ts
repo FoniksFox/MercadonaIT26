@@ -180,9 +180,15 @@ export class RealMap {
     this.clearing.set(false);
   }
 
-  /** The camera image tells the real size of the frame the points refer to. */
+  /** A camera image also tells the size of the frame, for a backend that does not send it. */
   protected measure(event: Event): void {
     const image = event.target as HTMLImageElement;
+    this.adoptSize(image.naturalWidth, image.naturalHeight);
+  }
+
+  /** Sets the size of the frame the points refer to, once it is known or when it changes. */
+  private adoptSize(frameWidth: number, frameHeight: number): void {
+    const image = { naturalWidth: frameWidth, naturalHeight: frameHeight };
     const { width, height, known } = this.frameSize();
     if (
       image.naturalWidth === 0 ||
@@ -208,6 +214,9 @@ export class RealMap {
 
   /** Adds one frame of the backend to the heat and the flow painted here. */
   private accumulate(frame: BackendFrame): void {
+    if (frame.size) {
+      this.adoptSize(frame.size.width, frame.size.height);
+    }
     const now = performance.now();
     const seconds = Math.min(MAX_GAP_SECONDS, (now - this.lastMessage) / 1000);
     this.lastMessage = now;

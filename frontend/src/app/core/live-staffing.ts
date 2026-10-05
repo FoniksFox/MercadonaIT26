@@ -1,10 +1,9 @@
-import { Supermarket } from '../core/supermarkets';
-import { ZONES, Zone, ZoneId, emptyZoneCounts } from '../core/zones';
-import { CrowdSimulator } from '../shared/heat/crowd-simulator';
 import { Coverage, OPEN_TILLS, STAFF_PLAN, assess, staffUnits } from './staffing';
+import { ZONES, Zone, ZoneId, emptyZoneCounts } from './zones';
 
-// The store right now, for the management view: customers per zone against the
-// staff on it. The customers are simulated until the backend provides them.
+// Staff against customers, right now. It is fed one reading of the store per
+// second (the customers standing in each zone) and keeps what the management
+// view shows: the state of each zone, what to do about it and the alerts.
 
 export interface LiveZone {
   zone: Zone;
@@ -38,9 +37,7 @@ export interface LiveSnapshot {
   events: StaffingEvent[];
 }
 
-/** Seconds simulated before the first snapshot: the store is already open and busy. */
-const WARM_UP_SECONDS = 240;
-/** Share of the gap to the current count that the smoothed count closes each second. */
+/** Share of the gap to the current count that the smoothed count closes with each reading. */
 const SMOOTHING = 0.08;
 /**
  * A zone is flagged as short once it is clearly over what its staff can
@@ -53,71 +50,12 @@ const MINUTES_PER_CUSTOMER_AT_TILL = 1.5;
 const MAX_EVENTS = 6;
 
 export class LiveStaffing {
-  private readonly simulator: CrowdSimulator;
   private readonly smoothed = emptyZoneCounts();
   private readonly short = new Set<ZoneId>();
   private events: StaffingEvent[] = [];
-  private pending = 0;
 
-  constructor(store: Supermarket, now = new Date()) {
-    this.simulator = new CrowdSimulator(`${store.id}:staffing`, store.busyness);
-    for (let second = WARM_UP_SECONDS; second > 0; second--) {
-      this.simulator.tick(0.5);
-      this.simulator.tick(0.5);
-      this.evaluate(new Date(now.getTime() - second * 1000));
-    }
-  }
-
-  /** Lets `seconds` pass in the store. */
-  advance(seconds: number, now = new Date()): void {
-    this.simulator.tick(seconds);
-    this.pending += seconds;
-    while (this.pending >= 1) {
-      this.pending -= 1;
-      this.evaluate(now);
-    }
-  }
-
-  snapshot(): LiveSnapshot {
-    const zones = ZONES.map((zone): LiveZone => {
-      const staff = STAFF_PLAN[zone.id];
-      const need = assess(zone.id, this.smoothed[zone.id], staff);
-      const short = this.short.has(zone.id);
-      let action: string | null = null;
-      if (short) {
-        const missing = Math.max(1, need.missing);
-        action =
-          zone.id === 'checkout'
-            ? missing === 1
-              ? 'Abrir otra caja'
-              : `Abrir ${staffUnits(zone.id, missing)} más`
-            : `Reforzar con ${staffUnits(zone.id, missing)}`;
-      } else if (need.coverage === 'tight') {
-        action = 'Vigilar';
-      }
-      return {
-        zone,
-        customers: Math.round(this.smoothed[zone.id]),
-        staff,
-        coverage: short ? 'short' : need.coverage,
-        missing: short ? Math.max(1, need.missing) : 0,
-        action,
-      };
-    });
-    return {
-      zones,
-      customers: this.simulator.people,
-      onShift: Object.values(STAFF_PLAN).reduce((sum, staff) => sum + staff, 0),
-      shortZones: this.short.size,
-      tillWaitMinutes:
-        Math.round((this.smoothed.checkout / OPEN_TILLS) * MINUTES_PER_CUSTOMER_AT_TILL * 2) / 2,
-      events: this.events,
-    };
-  }
-
-  /** Once per second: follow the customers of each zone and note when coverage changes. */
-  private evaluate(at: Date): void {
-    const standing = this.simulator.occupancy();
+  /** Takes a reading: the customers standing in each zone at `at`. Meant to be called once per second. */
+  observe(standing: Readonly<Record<ZoneId, number>>, at: Date): void {
     for (const zone of ZONES) {
       const id = zone.id;
       this.smoothed[id] += (standing[id] - this.smoothed[id]) * SMOOTHING;
@@ -136,6 +74,45 @@ export class LiveStaffing {
         this.note({ at, zone, short: false, text: 'Vuelve a estar cubierta' });
       }
     }
+  }
+
+  /** The state of every zone; `customers` is everyone in the store right now. */
+  snapshot(customers: number): LiveSnapshot {
+    const zones = ZONES.map((zone): LiveZone => {
+      const staff = STAFF_PLAN[zone.id];
+      const need = assess(zone.id, this.smoothed[zone.id], staff);
+      const short = this.short.has(zone.id);
+      let action: string | null = null;
+      if (short) {
+        const missing = Math.max(1, need.missing);
+        action =
+          zone.id === 'checkout'
+            ? missing === 1
+              ? 'Abrir otra caja'
+              : `Abrir ${staffUnits(zone.id, missing)} más`
+            : `Reforzar con ${staffUnits(zone.id, missing)}`;
+      } else if (need.coverage !== 'covered') {
+        action = 'Vigilar';
+      }
+      return {
+        zone,
+        customers: Math.round(this.smoothed[zone.id]),
+        staff,
+        // Over capacity but not yet flagged (or already recovering) reads as "at the limit".
+        coverage: short ? 'short' : need.coverage === 'covered' ? 'covered' : 'tight',
+        missing: short ? Math.max(1, need.missing) : 0,
+        action,
+      };
+    });
+    return {
+      zones,
+      customers,
+      onShift: Object.values(STAFF_PLAN).reduce((sum, staff) => sum + staff, 0),
+      shortZones: this.short.size,
+      tillWaitMinutes:
+        Math.round((this.smoothed.checkout / OPEN_TILLS) * MINUTES_PER_CUSTOMER_AT_TILL * 2) / 2,
+      events: this.events,
+    };
   }
 
   private note(event: StaffingEvent): void {

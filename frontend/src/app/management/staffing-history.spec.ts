@@ -1,5 +1,5 @@
 import { Supermarket } from '../core/supermarkets';
-import { assess } from './staffing';
+import { assess } from '../core/staffing';
 import { buildStaffingHistory } from './staffing-history';
 
 const BUSY: Supermarket = { id: 'busy', name: 'Busy', city: 'Test', busyness: 1.3 };
