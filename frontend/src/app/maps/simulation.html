@@ -90,9 +90,58 @@
   >
     <section class="rounded-2xl border border-line bg-surface p-4 shadow-sm">
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 class="font-semibold">{{ viewLabel() }}</h2>
+        <div class="min-w-0">
+          <h2 class="font-semibold">{{ viewLabel() }}</h2>
+          <div class="mt-1 flex min-h-5 flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-2">
+            @switch (view()) {
+              @case ('heatmap') {
+                <span class="font-semibold text-ink">Concentración</span>
+                <span>Baja</span>
+                <span class="h-2 w-32 rounded-full" [style.background]="heatGradient"></span>
+                <span>Alta</span>
+              }
+              @case ('flow') {
+                <app-icon name="arrow" class="size-5 text-accent" />
+                <span>
+                  <span class="font-semibold text-ink">Flujo predominante.</span>
+                  Cuanto más larga la flecha, más paso en ese sentido
+                </span>
+              }
+              @case ('occupancy') {
+                <span class="font-semibold text-ink">Ocupación de cada zona</span>
+                <span>Baja</span>
+                <span
+                  class="h-2 w-40 rounded-full"
+                  style="
+                    background: linear-gradient(
+                      to right,
+                      color-mix(in oklab, var(--accent) 10%, transparent),
+                      color-mix(in oklab, var(--accent) 70%, transparent)
+                    );
+                  "
+                ></span>
+                <span>Alta</span>
+              }
+            }
+          </div>
+        </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
           @if (live()) {
+            @if (view() === 'heatmap' && live()) {
+              <button
+                type="button"
+                class="rounded-lg border border-line px-3 py-2 text-sm font-semibold transition-colors"
+                [class]="
+                  accumulated()
+                    ? 'bg-accent text-on-accent'
+                    : 'bg-surface text-ink-2 hover:bg-sunken'
+                "
+                [attr.aria-pressed]="accumulated()"
+                (click)="toggleAccumulated()"
+              >
+                Acumulado
+              </button>
+            }
             <div
               class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold"
               role="group"
@@ -131,55 +180,12 @@
         [busyness]="supermarket().busyness"
         [period]="period()"
         [view]="view()"
+        [accumulated]="accumulated()"
         [restart]="restarts()"
         [speed]="speed()"
         (snapshot)="snapshot.set($event)"
       />
 
-      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-ink-2">
-        @switch (view()) {
-          @case ('heatmap') {
-            <span class="font-semibold text-ink">Concentración de personas</span>
-            <span>Baja</span>
-            <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
-            <span>Alta</span>
-          }
-          @case ('accumulated') {
-            <span class="font-semibold text-ink">Presencia acumulada</span>
-            <span>Baja</span>
-            <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
-            <span>Alta</span>
-          }
-          @case ('flow') {
-            <app-icon name="arrow" class="size-5 text-accent" />
-            <span>
-              <span class="font-semibold text-ink">Flujo predominante.</span>
-              Cuanto más larga la flecha, más paso en ese sentido
-            </span>
-          }
-          @case ('occupancy') {
-            <span class="font-semibold text-ink">Ocupación de cada zona</span>
-            <span>Baja</span>
-            <span
-              class="h-2 w-40 rounded-full"
-              style="
-                background: linear-gradient(
-                  to right,
-                  color-mix(in oklab, var(--accent) 10%, transparent),
-                  color-mix(in oklab, var(--accent) 70%, transparent)
-                );
-              "
-            ></span>
-            <span>Alta</span>
-          }
-        }
-        @if (live()) {
-          <span class="ml-auto flex items-center gap-2">
-            <span class="size-2.5 rounded-full bg-[#13201a] ring-2 ring-white"></span>
-            Persona, sin identificar
-          </span>
-        }
-      </div>
     </section>
 
     <div class="space-y-6">

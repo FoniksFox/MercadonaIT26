@@ -46,6 +46,7 @@ export class Simulation {
   protected readonly supermarket = inject(Supermarkets).current;
 
   protected readonly view = signal<MapView>('heatmap');
+  protected readonly accumulated = signal(false);
   protected readonly period = signal<MapPeriod>('live');
   protected readonly menuOpen = signal(false);
   /** Bumped by "Reiniciar simulación": the live map starts again from an empty store. */
@@ -60,7 +61,6 @@ export class Simulation {
   protected readonly heatGradient = HEAT_GRADIENT;
   protected readonly views: readonly { id: MapView; label: string; icon: IconName }[] = [
     { id: 'heatmap', label: 'Mapa de calor', icon: 'flame' },
-    { id: 'accumulated', label: 'Calor acumulado', icon: 'layers' },
     { id: 'flow', label: 'Mapa de flujo', icon: 'wind' },
     { id: 'occupancy', label: 'Ocupación', icon: 'layout' },
   ];
@@ -186,6 +186,9 @@ export class Simulation {
     if (view === this.view()) {
       return;
     }
+    if (view !== 'heatmap') {
+      this.accumulated.set(false);
+    }
     this.view.set(view);
     this.isViewAnimating.set(false);
     clearTimeout(this.viewAnimationTimer);
@@ -193,6 +196,10 @@ export class Simulation {
       this.isViewAnimating.set(true);
       this.viewAnimationTimer = setTimeout(() => this.isViewAnimating.set(false), 220);
     });
+  }
+
+  protected toggleAccumulated(): void {
+    this.accumulated.update((enabled) => !enabled);
   }
 
   protected closeMenuIfOutside(event: Event): void {

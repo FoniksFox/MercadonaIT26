@@ -75,6 +75,7 @@ export class StoreHeatmap {
   readonly busyness = input(1);
   readonly period = input<MapPeriod>('live');
   readonly view = input<MapView>('heatmap');
+  readonly accumulated = input(false);
   /** Change its value to start the live simulation again from an empty store. */
   readonly restart = input(0);
   /** Simulated seconds per real second while live, e.g. 2 to go twice as fast. */
@@ -232,13 +233,13 @@ export class StoreHeatmap {
       case 'heatmap':
         // A past period has no "recent": it shows what the whole period accumulated.
         if (this.live) {
+          if (this.accumulated()) {
+            this.total.paint(context, width, height, this.hottestTotal);
+          }
           this.recent.paint(context, width, height, this.hottestRecent);
         } else {
           this.total.paint(context, width, height, this.hottestTotal);
         }
-        break;
-      case 'accumulated':
-        this.total.paint(context, width, height, this.hottestTotal);
         break;
       case 'flow':
         paintFlow(
