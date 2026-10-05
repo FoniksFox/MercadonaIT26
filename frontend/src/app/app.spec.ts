@@ -17,9 +17,17 @@ describe('App', () => {
 
     expect(sidebar.textContent).toContain('MercaTrack');
     const links = [...sidebar.querySelectorAll('nav a')].map((link) => link.textContent?.trim());
-    expect(links.slice(0, 4)).toEqual(['Mapas', 'Gestión', 'Estadísticas', 'Configuración']);
-    expect(links[4]).toContain('Valencia Centro');
-    expect(links[4]).toContain('Cambiar de Mercadona');
+    // "Mapas" lists its two pages right under it.
+    expect(links.slice(0, 6)).toEqual([
+      'Mapas',
+      'Simulación',
+      'Real',
+      'Gestión',
+      'Estadísticas',
+      'Configuración',
+    ]);
+    expect(links[6]).toContain('Valencia Centro');
+    expect(links[6]).toContain('Cambiar de Mercadona');
   });
 
   it('should start in light mode and switch to dark with the toggle', async () => {

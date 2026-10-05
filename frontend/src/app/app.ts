@@ -70,7 +70,6 @@ export class App {
         { path: '/maps/real', label: 'Real' },
       ],
     },
-    { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
     { path: '/management', label: 'Gestión', icon: 'staff' },
     { path: '/statistics', label: 'Estadísticas', icon: 'stats' },
   ];
