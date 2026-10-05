@@ -1,64 +1,116 @@
 <div class="mx-auto max-w-7xl px-6 py-6 md:px-8 md:py-8">
-  <app-page-header title="Mapas" />
+  <app-page-header title="Mapa simulado">
+    @if (live()) {
+      <div
+        class="flex items-center gap-1 rounded-xl border border-line bg-surface p-1 text-sm font-semibold shadow-sm"
+        role="group"
+        aria-label="Velocidad de la simulación"
+      >
+        @for (option of speeds; track option) {
+          <button
+            type="button"
+            class="rounded-lg px-3 py-2 tabular-nums transition-colors"
+            [class]="speed() === option ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
+            [attr.aria-pressed]="speed() === option"
+            [attr.aria-label]="'Velocidad por ' + option"
+            (click)="speed.set(option)"
+          >
+            ×{{ option }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors hover:bg-sunken"
+        (click)="restarts.set(restarts() + 1)"
+      >
+        <app-icon name="restart" class="size-4" />
+        Reiniciar simulación
+      </button>
+    }
+  </app-page-header>
 
   <div
     class="page-content relative z-30 mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm"
-    role="group"
-    aria-label="Vistas del mapa"
   >
-    @for (option of views; track option.id) {
+    <div class="flex flex-wrap gap-2" role="tablist" aria-label="Vistas del mapa">
+      @for (option of views; track option.id) {
+        <button
+          type="button"
+          role="tab"
+          class="map-view-tab"
+          [class.map-view-tab-active]="view() === option.id"
+          [attr.aria-selected]="view() === option.id"
+          (click)="selectView(option.id)"
+        >
+          <app-icon [name]="option.icon" class="size-4" />
+          {{ option.label }}
+        </button>
+      }
+    </div>
+
+    <div
+      class="relative z-40 ml-auto flex items-center gap-2"
+      role="group"
+      aria-label="Periodo del mapa"
+    >
       <button
         type="button"
-        role="tab"
         class="map-view-tab"
-        [class.map-view-tab-active]="view() === option.id"
-        [attr.aria-selected]="view() === option.id"
-        (click)="selectView(option.id)"
+        [class.map-view-tab-active]="live()"
+        [attr.aria-pressed]="live()"
+        (click)="choose('live')"
       >
-        <app-icon [name]="option.icon" class="size-4" />
-        {{ option.label }}
+        <span
+          class="size-2 rounded-full"
+          [class]="live() ? 'animate-pulse bg-current' : 'bg-brand-red'"
+        ></span>
+        En vivo
       </button>
-    }
-    <div class="relative z-40 ml-auto flex items-center gap-2">
+      <div
+        class="relative"
+        #menu
+        (mouseenter)="menuOpen.set(true)"
+        (mouseleave)="menuOpen.set(false)"
+      >
         <button
           type="button"
           class="map-view-tab"
-          [class.map-view-tab-active]="live()"
-          [attr.aria-pressed]="live()"
-          (click)="choose('live')"
+          [class.map-view-tab-active]="!live()"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="openPast()"
         >
-          <span class="size-2 rounded-full" [class]="live() ? 'animate-pulse bg-current' : 'bg-brand-red'"></span>
-          En vivo
+          <app-icon name="history" class="size-4" />
+          {{ pastLabel() }}
+          <app-icon name="chevron-down" class="size-4" />
         </button>
-        <div
-          class="relative"
-          #menu
-          (mouseenter)="menuOpen.set(true)"
-          (mouseleave)="menuOpen.set(false)"
-        >
-          <button
-            type="button"
-            class="map-view-tab"
-            [class.map-view-tab-active]="!live()"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="menuOpen()"
-            (click)="$event.stopPropagation()"
+        @if (menuOpen()) {
+          <div
+            role="menu"
+            aria-label="Histórico"
+            class="absolute right-0 top-full z-50 w-48 rounded-xl border border-line bg-surface p-1 font-medium shadow-lg"
           >
-            <app-icon name="history" class="size-4" />
-            {{ pastLabel() }}
-            <app-icon name="chevron-down" class="size-4" />
-          </button>
-          @if (menuOpen()) {
-            <div role="menu" aria-label="Histórico" class="absolute right-0 top-full z-50 w-48 rounded-xl border border-line bg-surface p-1 font-medium shadow-lg">
-              @for (option of pastPeriods; track option.id) {
-                <button type="button" role="menuitemradio" class="relative flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-ink hover:bg-sunken" [attr.aria-checked]="period() === option.id" (click)="choose(option.id)">
-                  <app-icon name="check" class="absolute left-3 size-4" [class.invisible]="period() !== option.id" />
-                  {{ option.label }}
-                </button>
-              }
-            </div>
-          }
-        </div>
+            @for (option of pastPeriods; track option.id) {
+              <button
+                type="button"
+                role="menuitemradio"
+                class="relative flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-ink hover:bg-sunken"
+                [attr.aria-checked]="period() === option.id"
+                (click)="choose(option.id)"
+              >
+                <app-icon
+                  name="check"
+                  class="absolute left-3 size-4"
+                  [class.invisible]="period() !== option.id"
+                />
+                {{ option.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -83,6 +135,8 @@
         [busyness]="supermarket().busyness"
         [period]="period()"
         [view]="view()"
+        [restart]="restarts()"
+        [speed]="speed()"
         (snapshot)="snapshot.set($event)"
       />
 
@@ -90,6 +144,12 @@
         @switch (view()) {
           @case ('heatmap') {
             <span class="font-semibold text-ink">Concentración de personas</span>
+            <span>Baja</span>
+            <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
+            <span>Alta</span>
+          }
+          @case ('accumulated') {
+            <span class="font-semibold text-ink">Presencia acumulada</span>
             <span>Baja</span>
             <span class="h-2 w-40 rounded-full" [style.background]="heatGradient"></span>
             <span>Alta</span>
@@ -170,7 +230,9 @@
                   ></div>
                 </div>
               </div>
-              <p class="text-right font-semibold tabular-nums">{{ row.value }}{{ zoneList().unit }}</p>
+              <p class="text-right font-semibold tabular-nums">
+                {{ row.value }}{{ zoneList().unit }}
+              </p>
             </li>
           }
         </ul>
