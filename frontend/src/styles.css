@@ -1,1 +1,92 @@
 @import "tailwindcss";
+
+/* Light is the default theme; dark is opt-in through the .dark class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Brand palette (see colors.txt). */
+@theme {
+  --color-brand-green: #149e6e;
+  --color-brand-yellow-green: #bfd148;
+  --color-brand-orange: #ffa100;
+  --color-brand-red: #e33a2f;
+  --color-brand-burgundy: #97004a;
+}
+
+/* Semantic colors: components use these, a theme only swaps the variables below. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-sidebar: var(--sidebar);
+  --color-series: var(--series);
+  --color-grid: var(--grid);
+}
+
+:root {
+  color-scheme: light;
+  --canvas: #f3f6f2;
+  --surface: #ffffff;
+  --sunken: #eaf0ea;
+  --line: #d9e1da;
+  --ink: #13201a;
+  --ink-2: #45564c;
+  --ink-3: #6b7a71;
+  /* Brand green stepped down so white text on it clears 4.5:1. */
+  --accent: #0e7c56;
+  --on-accent: #ffffff;
+  --sidebar: #0e7c56;
+  /* Charts. */
+  --series: #149e6e;
+  --grid: #e3e9e3;
+  --seq-low: #e4f3ec;
+  --seq-high: #0b5c40;
+  /* Store floor plan. */
+  --plan-floor: #fbfcfa;
+  --plan-wall: #aebbb2;
+  --plan-fixture: #dde6de;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: #0c1310;
+  --surface: #151e1a;
+  --sunken: #1b2621;
+  --line: #2a3832;
+  --ink: #f0f5f2;
+  --ink-2: #b7c4bc;
+  --ink-3: #8a988f;
+  --accent: #1aa877;
+  --on-accent: #06140e;
+  --sidebar: #10241b;
+  --series: #1aa877;
+  --grid: #24312b;
+  --seq-low: #1b2621;
+  --seq-high: #3fd49b;
+  --plan-floor: #121a16;
+  --plan-wall: #3c4d45;
+  --plan-fixture: #25332c;
+}
+
+@layer base {
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  input[type="range"],
+  input[type="checkbox"] {
+    accent-color: var(--accent);
+  }
+}

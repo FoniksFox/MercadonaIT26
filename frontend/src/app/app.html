@@ -1,76 +1,66 @@
-<main class="flex min-h-screen bg-slate-950 text-slate-100">
-  <aside class="flex w-64 shrink-0 flex-col bg-emerald-700 px-4 py-6 shadow-xl">
-    <div class="px-3">
-      <p class="text-2xl font-bold tracking-tight">MercaFlow</p>
-      <p class="mt-1 text-sm text-emerald-100">La tienda que entiende su movimiento</p>
-    </div>
+<div class="flex min-h-screen flex-col bg-canvas text-ink md:flex-row">
+  <aside
+    class="flex shrink-0 flex-col bg-sidebar text-white md:sticky md:top-0 md:h-screen md:w-64"
+  >
+    <a routerLink="/maps" class="block px-6 pt-5 md:pt-7">
+      <span class="flex items-center gap-3">
+        <img src="favicon.svg" alt="" width="36" height="36" class="size-9 rounded-lg" />
+        <span class="text-2xl font-bold tracking-tight">MercaTrack</span>
+      </span>
+      <span class="mt-2 hidden text-sm text-white/75 md:block">
+        La tienda que entiende su propio movimiento
+      </span>
+    </a>
 
-    <nav class="mt-10 flex flex-col gap-3" aria-label="Navegación principal">
-      <button
-        type="button"
-        (click)="selectTab('maps')"
-        [attr.aria-current]="activeTab() === 'maps' ? 'page' : null"
-        class="flex min-h-16 items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold transition-colors hover:bg-emerald-500"
-        [class.bg-emerald-500]="activeTab() === 'maps'"
-        [class.shadow-md]="activeTab() === 'maps'"
-      >
-        <svg aria-hidden="true" class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m9 20 6-3 6 3V4l-6-3-6 3-6-3v16l6 3Z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 4v16M15 1v16" />
-        </svg>
-        <span>Mapas</span>
-      </button>
-
-      <button
-        type="button"
-        (click)="selectTab('staff')"
-        [attr.aria-current]="activeTab() === 'staff' ? 'page' : null"
-        class="flex min-h-16 items-center gap-4 rounded-xl px-4 text-left text-lg font-semibold transition-colors hover:bg-emerald-500"
-        [class.bg-emerald-500]="activeTab() === 'staff'"
-        [class.shadow-md]="activeTab() === 'staff'"
-      >
-        <svg aria-hidden="true" class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-        <span>Staff</span>
-      </button>
+    <nav
+      aria-label="Navegación principal"
+      class="mt-4 flex gap-1 overflow-x-auto px-3 pb-3 md:mt-8 md:flex-col md:pb-0"
+    >
+      @for (item of navigation; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-white/15"
+          ariaCurrentWhenActive="page"
+          class="flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-white/90 transition-colors hover:bg-white/10"
+        >
+          <app-icon [name]="item.icon" class="size-5" />
+          {{ item.label }}
+        </a>
+      }
     </nav>
+
+    <div class="flex gap-2 px-3 pb-3 md:mt-auto md:flex-col md:pb-5">
+      <a
+        routerLink="/stores"
+        routerLinkActive="bg-white/15"
+        ariaCurrentWhenActive="page"
+        class="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-white/25 px-3 py-2.5 transition-colors hover:bg-white/10"
+      >
+        <app-icon name="store" class="size-5" />
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-semibold">{{ supermarket().name }}</span>
+          <span class="block text-xs text-white/75">Cambiar de Mercadona</span>
+        </span>
+        <app-icon name="swap" class="size-4 text-white/75" />
+      </a>
+
+      <button
+        type="button"
+        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/90 transition-colors hover:bg-white/10"
+        (click)="theme.toggle()"
+      >
+        <app-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" class="size-5" />
+        <span class="hidden md:inline">
+          {{ theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}
+        </span>
+        <span class="sr-only md:hidden">
+          {{ theme.mode() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}
+        </span>
+      </button>
+    </div>
   </aside>
 
-  <section class="min-w-0 flex-1">
-    @if (activeTab() === 'maps') {
-      <div class="mx-auto flex max-w-5xl flex-col items-center px-6 py-16 text-center">
-        <h1 class="text-5xl font-bold tracking-tight">{{ title() }}</h1>
-        <p class="mt-4 text-lg text-slate-400">La tienda que entiende su propio movimiento</p>
-
-        <div class="mt-12 grid w-full gap-6 sm:grid-cols-2">
-          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 class="text-xl font-semibold">Heatmap</h2>
-            <p class="mt-2 text-sm text-slate-400">Where people move and stand over time.</p>
-          </section>
-          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h2 class="text-xl font-semibold">Vector field</h2>
-            <p class="mt-2 text-sm text-slate-400">Direction and magnitude of movement.</p>
-          </section>
-        </div>
-
-        <button
-          type="button"
-          class="mt-12 rounded-xl bg-emerald-500 px-8 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
-        >
-          Upload a video
-        </button>
-      </div>
-    } @else {
-      <div class="mx-auto max-w-5xl px-6 py-16">
-        <h1 class="text-4xl font-bold tracking-tight">Staff</h1>
-        <p class="mt-3 text-lg text-slate-400">
-          Consulta la distribución y el movimiento del personal de la tienda.
-        </p>
-        <div class="mt-10 rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 p-12 text-center text-slate-400">
-          Los datos del personal aparecerán aquí cuando haya un análisis disponible.
-        </div>
-      </div>
-    }
-  </section>
-</main>
+  <main class="min-w-0 flex-1">
+    <router-outlet />
+  </main>
+</div>

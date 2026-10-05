@@ -1,0 +1,73 @@
+<header class="flex flex-wrap items-center justify-between gap-4 px-6 pt-6 md:px-8">
+  <h1 class="text-2xl font-bold tracking-tight">Estadísticas</h1>
+
+  <div
+    class="flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-sm font-medium"
+    role="group"
+    aria-label="Periodo"
+  >
+    @for (option of ranges; track option.id) {
+      <button
+        type="button"
+        class="rounded-md px-3 py-1.5 transition-colors"
+        [class]="range() === option.id ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-sunken'"
+        [attr.aria-pressed]="range() === option.id"
+        (click)="range.set(option.id)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+</header>
+
+<div class="space-y-6 px-6 py-6 md:px-8">
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <app-stat-tile
+      label="Visitantes"
+      icon="cart"
+      [value]="visitors()"
+      [change]="data().visitorsChange"
+      [against]="against()"
+    />
+    <app-stat-tile
+      label="Permanencia media"
+      icon="timer"
+      [value]="data().stayMinutes + ' min'"
+      [change]="data().stayChange"
+      [against]="against()"
+    />
+    <app-stat-tile label="Hora punta" icon="clock" [value]="data().peakHour" />
+    <app-stat-tile
+      label="Zona más visitada"
+      [icon]="data().mostVisited.icon"
+      [value]="data().mostVisited.name"
+    />
+  </div>
+
+  <app-chart-card title="Afluencia por hora" [unit]="hourlyUnit()">
+    <app-line-chart [labels]="hours" [series]="hourlySeries()" label="Afluencia por hora" />
+    <app-data-table chartTable [columns]="hourlyTable().columns" [rows]="hourlyTable().rows" />
+  </app-chart-card>
+
+  <div class="grid gap-6 xl:grid-cols-2">
+    <app-chart-card title="Visitas por zona" unit="Sin las cajas, por donde pasan todos">
+      <app-bar-chart [rows]="visitRows()" />
+      <app-data-table chartTable [columns]="['Zona', 'Visitas']" [rows]="visitTable()" />
+    </app-chart-card>
+
+    <app-chart-card title="Permanencia media por zona" unit="Minutos por visita">
+      <app-bar-chart [rows]="stayRows()" />
+      <app-data-table chartTable [columns]="['Zona', 'Permanencia']" [rows]="stayTable()" />
+    </app-chart-card>
+  </div>
+
+  @if (data().weekGrid) {
+    <app-chart-card
+      title="Afluencia por día y hora"
+      unit="Media de personas que entran cada hora"
+    >
+      <app-heat-grid [rows]="gridRows()" [columns]="shortHours" unit="personas/hora" />
+      <app-data-table chartTable [columns]="gridColumns" [rows]="gridTable()" />
+    </app-chart-card>
+  }
+</div>

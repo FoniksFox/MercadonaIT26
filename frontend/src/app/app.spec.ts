@@ -1,24 +1,37 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-    })
-      .compileComponents();
+      providers: [provideRouter([])],
+    }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
+  it('should show the brand and the four views in the sidebar', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('MercaFlow');
+    const sidebar = (fixture.nativeElement as HTMLElement).querySelector('aside')!;
+
+    expect(sidebar.textContent).toContain('MercaTrack');
+    const links = [...sidebar.querySelectorAll('nav a')].map((link) => link.textContent?.trim());
+    expect(links).toEqual(['Mapas', 'Estadísticas', 'Gestión', 'Configuración']);
+  });
+
+  it('should start in light mode and switch to dark with the toggle', async () => {
+    localStorage.clear();
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const root = document.documentElement;
+    expect(root.classList.contains('dark')).toBe(false);
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('aside button')!.click();
+    await fixture.whenStable();
+    expect(root.classList.contains('dark')).toBe(true);
+
+    root.classList.remove('dark');
+    localStorage.clear();
   });
 });

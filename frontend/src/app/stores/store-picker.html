@@ -1,0 +1,71 @@
+<header class="px-6 pt-6 md:px-8">
+  <h1 class="text-2xl font-bold tracking-tight">Cambiar de Mercadona</h1>
+</header>
+
+<ul class="grid gap-4 px-6 py-6 md:px-8 lg:grid-cols-2 2xl:grid-cols-3">
+  @for (store of supermarkets.all; track store.id) {
+    @let current = store.id === supermarkets.current().id;
+    <li>
+      <button
+        type="button"
+        class="flex w-full items-center gap-4 rounded-2xl border bg-surface p-5 text-left transition-colors"
+        [class]="current ? 'border-accent' : 'border-line hover:border-ink-3'"
+        [disabled]="current"
+        (click)="ask(store)"
+      >
+        <span class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sunken text-accent">
+          <app-icon name="store" class="size-6" />
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-semibold">Mercadona {{ store.name }}</span>
+          <span class="block text-sm text-ink-2">{{ store.city }} · 9:00 – 21:30</span>
+        </span>
+        @if (current) {
+          <span class="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-accent">
+            <app-icon name="check" class="size-5" />
+            Tienda actual
+          </span>
+        }
+      </button>
+    </li>
+  }
+</ul>
+
+<dialog
+  #dialog
+  class="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-line bg-surface p-6 text-ink shadow-xl backdrop:bg-black/50"
+  aria-labelledby="switch-store-title"
+  (close)="pending.set(null)"
+>
+  @if (pending(); as store) {
+    <div class="flex items-start gap-4">
+      <app-icon name="alert" class="mt-0.5 size-7 text-brand-orange" />
+      <div>
+        <h2 id="switch-store-title" class="text-lg font-semibold">
+          ¿Cambiar a Mercadona {{ store.name }}?
+        </h2>
+        <p class="mt-2 text-sm text-ink-2">
+          Dejarás de ver Mercadona {{ supermarkets.current().name }}. Los mapas, las estadísticas
+          y la gestión pasarán a mostrar la nueva tienda.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button
+        type="button"
+        class="rounded-lg border border-line px-4 py-2 font-medium hover:bg-sunken"
+        (click)="cancel()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent hover:brightness-110"
+        (click)="confirm()"
+      >
+        Cambiar
+      </button>
+    </div>
+  }
+</dialog>

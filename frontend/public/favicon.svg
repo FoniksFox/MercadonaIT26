@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- MercaTrack mark: an "M" drawn as the heat track a shopper leaves, ending in the dot that is the person. -->
+  <defs>
+    <linearGradient id="trail" x1="13" y1="0" x2="51" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#149e6e"/>
+      <stop offset="0.38" stop-color="#bfd148"/>
+      <stop offset="0.7" stop-color="#ffa100"/>
+      <stop offset="1" stop-color="#e33a2f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0d1f17"/>
+  <path d="M14 47V19l18 19 18-19v15" fill="none" stroke="url(#trail)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="50" cy="48" r="4.75" fill="#ffffff"/>
+</svg>
