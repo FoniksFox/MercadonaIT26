@@ -21,6 +21,7 @@
       #nav
       class="relative flex min-h-0 gap-2 overflow-x-auto rounded-2xl bg-sidebar-panel/90 p-3 shadow-inner md:flex-1 md:flex-col md:overflow-x-visible md:overflow-y-auto"
       [class.is-indicator-animating]="isAnimating()"
+      [class.indicator-jump]="indicatorJump()"
       aria-label="Navegación principal"
     >
       @if (indicator(); as box) {

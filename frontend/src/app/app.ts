@@ -26,6 +26,7 @@ interface NavigationItem {
 }
 
 type NavigationDirection = 'up' | 'down';
+type NavigationGroup = 'analysis' | 'account';
 
 /** Box of the highlight behind the active sidebar entry, in pixels inside the nav. */
 interface IndicatorBox {
@@ -85,10 +86,12 @@ export class App {
   protected readonly indicator = signal<IndicatorBox | null>(null);
   protected readonly navigationDirection = signal<NavigationDirection>('down');
   protected readonly isAnimating = signal(false);
+  protected readonly indicatorJump = signal(false);
 
   private readonly nav = viewChild.required<ElementRef<HTMLElement>>('nav');
   private previousPath: string | null = null;
   private animationTimer?: ReturnType<typeof setTimeout>;
+  private indicatorJumpTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     effect(() => {
@@ -105,7 +108,10 @@ export class App {
       // The web font arrives late and can shift the entries.
       document.fonts?.ready.then(() => this.placeIndicator());
     });
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.animationTimer));
+    inject(DestroyRef).onDestroy(() => {
+      clearTimeout(this.animationTimer);
+      clearTimeout(this.indicatorJumpTimer);
+    });
   }
 
   /** Puts the highlight behind the sidebar entry of the current page. */
@@ -131,14 +137,26 @@ export class App {
     if (path === null || previous === null || path === previous) {
       return;
     }
+    const sameGroup = this.groupFor(previous) === this.groupFor(path);
     this.navigationDirection.set(
       this.order.indexOf(path) > this.order.indexOf(previous) ? 'down' : 'up',
     );
     this.isAnimating.set(false);
+    clearTimeout(this.indicatorJumpTimer);
+    this.indicatorJump.set(!sameGroup);
+    if (!sameGroup) {
+      this.indicatorJumpTimer = setTimeout(() => this.indicatorJump.set(false), 80);
+      return;
+    }
+
     clearTimeout(this.animationTimer);
     requestAnimationFrame(() => {
       this.isAnimating.set(true);
       this.animationTimer = setTimeout(() => this.isAnimating.set(false), ANIMATION_MS);
     });
+  }
+
+  private groupFor(path: string): NavigationGroup {
+    return this.mainNavigation.some((item) => item.path === path) ? 'analysis' : 'account';
   }
 }

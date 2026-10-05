@@ -143,6 +143,11 @@
   transform-origin: center;
 }
 
+.indicator-jump .tab-active-indicator {
+  transition: none;
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .content-slide-down,
   .content-slide-up,

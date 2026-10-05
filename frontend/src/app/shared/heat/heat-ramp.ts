@@ -39,7 +39,7 @@ export function buildHeatLut(): Uint8ClampedArray {
   for (let i = 0; i < 256; i++) {
     const t = i / 255;
     const [r, g, b] = heatColor(t);
-    const alpha = t < 0.03 ? 0 : Math.min(1, (t - 0.03) / 0.22) * 0.8;
+    const alpha = t < 0.015 ? 0 : 0.18 + Math.min(1, (t - 0.015) / 0.2) * 0.82;
     lut.set([r, g, b, Math.round(alpha * 255)], i * 4);
   }
   return lut;

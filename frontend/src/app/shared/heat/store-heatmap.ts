@@ -33,7 +33,9 @@ export interface CrowdSnapshot {
 const COLS = 125;
 const ROWS = 78;
 /** Blob size of one person, in cells. */
-const BLOB_RADIUS = 2.75;
+const BLOB_RADIUS = 3.75;
+/** Minimum visible contribution from a person in each rendered simulation step. */
+const MIN_HEAT_DEPOSIT = 0.35;
 /** Share of the heat that is left after one second (live only). */
 const LIVE_RETENTION = 0.955;
 /** The flow keeps a longer memory than the heat, so the arrows stay steady. */
@@ -145,7 +147,7 @@ export class StoreHeatmap {
     for (const point of this.simulator.points()) {
       const x = point.x / PLAN.width;
       const y = point.y / PLAN.height;
-      this.field.add(x, y, BLOB_RADIUS, seconds);
+      this.field.add(x, y, BLOB_RADIUS, Math.max(seconds, MIN_HEAT_DEPOSIT));
       const before = this.lastPositions.get(point.id);
       if (before) {
         this.flow.add(x, y, point.x - before.x, point.y - before.y);
