@@ -57,8 +57,8 @@ Abre `http://localhost:4200`.
 
 ## Equipo
 
-- Boris: Organización + presentación
-- Salva: Organización + soporte
+- Boris: Lead + presentación
+- Salva: Lead + presentación
 - Daniel: IA + backend
 - Bohdan: IA + backend
 - Edy: Frontend
